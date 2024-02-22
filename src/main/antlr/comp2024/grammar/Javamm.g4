@@ -10,16 +10,25 @@ LCURLY : '{' ;
 RCURLY : '}' ;
 LPAREN : '(' ;
 RPAREN : ')' ;
+DIV : '/' ;
 MUL : '*' ;
 ADD : '+' ;
+SUB : '-' ;
+AND : '&&' ;
+LT : '<' ;
 
 CLASS : 'class' ;
 INT : 'int' ;
 PUBLIC : 'public' ;
 RETURN : 'return' ;
 
-INTEGER : [0-9] ;
-ID : [a-zA-Z]+ ;
+INTEGER : '0' | [1-9] [0-9]*;
+
+ID : [a-zA-Z$_] [a-zA-Z0-9$_]* ;
+
+COMMENT : '//' ~[\r\n]* -> skip ;
+MULTI_COMMENT : '/*' .*? '*/' -> skip ;
+
 
 WS : [ \t\n\r\f]+ -> skip ;
 
@@ -59,11 +68,15 @@ stmt
     ;
 
 expr
-    : expr op= MUL expr #BinaryExpr //
-    | expr op= ADD expr #BinaryExpr //
-    | value=INTEGER #IntegerLiteral //
-    | name=ID #VarRefExpr //
+    : LPAREN expr RPAREN #ParenExpr
+    | expr AND expr #LogicalOpExpr
+    | expr LT expr #RelationalOpExpr
+    | expr op=(MUL | DIV) expr #MulDivExpr
+    | expr op=(ADD | SUB) expr #AddSubExpr
+    | value=INTEGER #IntegerLiteral
+    | name=ID #VarRefExpr
     ;
+
 
 
 
