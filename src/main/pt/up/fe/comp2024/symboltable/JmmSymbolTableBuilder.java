@@ -29,6 +29,7 @@ public class JmmSymbolTableBuilder {
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
 
+
         return new JmmSymbolTable(className, methods, returnTypes, params, locals);
     }
 
