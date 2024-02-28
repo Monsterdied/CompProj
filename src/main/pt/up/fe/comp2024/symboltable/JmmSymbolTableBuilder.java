@@ -7,13 +7,9 @@ import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
-import static pt.up.fe.comp2024.ast.Kind.VAR_DECL;
+import static pt.up.fe.comp2024.ast.Kind.*;
 
 public class JmmSymbolTableBuilder {
 
@@ -28,9 +24,10 @@ public class JmmSymbolTableBuilder {
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
+        var fields = buildFields(classDecl);
 
 
-        return new JmmSymbolTable(className, methods, returnTypes, params, locals);
+        return new JmmSymbolTable(className,fields, methods, returnTypes, params, locals);
     }
 
     private static Map<String, Type> buildReturnTypes(JmmNode classDecl) {
@@ -43,17 +40,31 @@ public class JmmSymbolTableBuilder {
 
         return map;
     }
-
+private static List<Symbol> buildFields(JmmNode classDecl){
+        List<Symbol> symbols = new ArrayList<>();
+    classDecl.getChildren(VAR_DECL).stream()
+            .forEach(var ->
+                    symbols.add(new Symbol(new Type(var.getChildren().get(0).get("name"),false),var.get("name")))
+            );
+    return symbols;
+}
     private static Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
         // TODO: Simple implementation that needs to be expanded
-
         Map<String, List<Symbol>> map = new HashMap<>();
-
-        var intType = new Type(TypeUtils.getIntTypeName(), false);
-
         classDecl.getChildren(METHOD_DECL).stream()
-                .forEach(method -> map.put(method.get("name"), Arrays.asList(new Symbol(intType, method.getJmmChild(1).get("name")))));
-
+                .forEach(method -> {
+                            List<Symbol> symbols= new ArrayList<>();
+                            method.getChildren().get(1).getChildren().stream()// não sei se funciona com array
+                                    .forEach(type -> symbols.add(new Symbol(new Type(type.getChildren().get(0).get("name"),false),type.get("name"))));
+                            map.put(method.get("name"),symbols);
+                        }
+                        );
+        if(classDecl.getChildren("MainMethodDecl").size() >0){
+            List<Symbol> symbols= new ArrayList<>();
+            var variable = classDecl.getChildren("MainMethodDecl").get(0).getChildren().get(0).getChildren().get(0).get("name");
+            symbols.add(new Symbol(new Type("string",false),variable));
+            map.put("MainMethodDecl",symbols);
+        }
         return map;
     }
 

@@ -63,6 +63,7 @@ classDecl
     : CLASS name=ID (EXTENDS parent=ID)?
         LCURLY
         varDecl*
+        methodDecl*
         mainMethodDecl?
         methodDecl*
         RCURLY
@@ -88,7 +89,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : STATIC VOID MAIN LPAREN 'String' LBRACK RBRACK args RPAREN LCURLY stmt* RCURLY
+    : PUBLIC? STATIC VOID MAIN LPAREN 'String' LBRACK RBRACK args RPAREN LCURLY stmt* RCURLY
     ;
 
 paramList
