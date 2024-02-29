@@ -15,11 +15,12 @@ public class JmmSymbolTableBuilder {
 
 
     public static JmmSymbolTable build(JmmNode root) {
-
-        var classDecl = root.getJmmChild(0);
-        SpecsCheck.checkArgument(Kind.CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
+        int i = 0;
+        var importsNodes = root.getChildren("ImportDecl");
+        List<String> imports = buildImports(importsNodes);
+        var classDecl = root.getJmmChild(importsNodes.size());
+        //SpecsCheck.checkArgument(Kind.CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
-
         var methods = buildMethods(classDecl);
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
@@ -27,16 +28,32 @@ public class JmmSymbolTableBuilder {
         var fields = buildFields(classDecl);
 
 
-        return new JmmSymbolTable(className,fields, methods, returnTypes, params, locals);
+        return new JmmSymbolTable(className,imports,fields, methods, returnTypes, params, locals);
     }
-
+    private static List<String> buildImports(List<JmmNode> importsNodes) {
+        List<String> imports = new ArrayList<>();
+        importsNodes.stream()
+                .forEach(var ->
+                        imports.add(var.get("ID"))
+                );
+        return imports;
+    }
     private static Map<String, Type> buildReturnTypes(JmmNode classDecl) {
         // TODO: Simple implementation that needs to be expanded
 
         Map<String, Type> map = new HashMap<>();
 
-        classDecl.getChildren(METHOD_DECL).stream()
-                .forEach(method -> map.put(method.get("name"), new Type(TypeUtils.getIntTypeName(), false)));
+        classDecl.getChildren(METHOD_DECL).stream()//not works with arrays
+                .forEach(method -> {
+                    var type = "";
+                    var is_array = false;
+                    if(method.getChildren("Type").get(0).getChildren().size() == 0){
+                        type = method.getChildren("Type").get(0).get("name");
+                    }else{
+                        type = method.getChildren("Type").get(0).getChildren().get(0).get("name");
+                        is_array = true;
+                    }
+                    map.put(method.get("name"), new Type(type,is_array));});
 
         return map;
     }

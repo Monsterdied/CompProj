@@ -56,7 +56,7 @@ program
     ;
 
 importDecl
-    : IMPORT ID (DOT ID)* SEMI
+    : IMPORT value+=ID (DOT value+=ID)* SEMI
     ;
 
 classDecl
@@ -134,7 +134,7 @@ expr
     | expr op=AND expr #LogicalOpExpr
     | expr op=LT expr #RelationalOpExpr
     | expr op=(MUL | DIV) expr #MulDivExpr
-    | expr op=(ADD | SUB) expr #AddSubExpr
+    | expr op=(ADD | SUB) expr #BinaryExpr
     | op=NOT expr #NotExpr
     | value=INTEGER #IntegerLiteral
     | value=BOOLEAN_VALUE #BooleanLiteral
