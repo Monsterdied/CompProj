@@ -123,7 +123,7 @@ public class SymbolTableTest {
         var st = semantics.getSymbolTable();
         var methods = st.getMethods();
         assertEquals(1, methods.size());
-
+        var test = methods.get(0);
         var parameters = st.getParameters(methods.get(0));
         assertEquals(3, parameters.size());
         assertEquals("Parameter 1", "int", parameters.get(0).getType().getName());

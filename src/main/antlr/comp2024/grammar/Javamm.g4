@@ -10,19 +10,38 @@ LCURLY : '{' ;
 RCURLY : '}' ;
 LPAREN : '(' ;
 RPAREN : ')' ;
+LBRACK : '[' ;
+RBRACK : ']' ;
+COMMA : ',' ;
+DOT : '.' ;
 DIV : '/' ;
 MUL : '*' ;
 ADD : '+' ;
 SUB : '-' ;
 AND : '&&' ;
 LT : '<' ;
+NOT: '!' ;
+VARAGS: '...' ;
 
 CLASS : 'class' ;
 INT : 'int' ;
+BOOLEAN : 'boolean' ;
 PUBLIC : 'public' ;
+IMPORT : 'import';
 RETURN : 'return' ;
+EXTENDS : 'extends' ;
+IF : 'if' ;
+ELSE : 'else' ;
+ELSEIF : 'else if' ;
+WHILE : 'while' ;
+NEW : 'new' ;
+STATIC : 'static' ;
+VOID : 'void' ;
+MAIN : 'main' ;
+LENGTH : 'length' ;
 
 INTEGER : '0' | [1-9] [0-9]*;
+BOOLEAN_VALUE : 'true' | 'false' ;
 
 ID : [a-zA-Z$_] [a-zA-Z0-9$_]* ;
 
@@ -33,13 +52,19 @@ MULTI_COMMENT : '/*' .*? '*/' -> skip ;
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : classDecl EOF
+    : (importDecl)* classDecl EOF
     ;
 
+importDecl
+    : IMPORT value+=ID (DOT value+=ID)* SEMI
+    ;
 
 classDecl
-    : CLASS name=ID
+    : CLASS name=ID (EXTENDS parent=ID)?
         LCURLY
+        varDecl*
+        methodDecl*
+        mainMethodDecl?
         methodDecl*
         RCURLY
     ;
@@ -49,34 +74,97 @@ varDecl
     ;
 
 type
-    : name= INT ;
+    : type LBRACK RBRACK
+    | name= INT
+    | name= BOOLEAN
+    | name= ID
+    | name= 'String';
 
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
         type name=ID
-        LPAREN param RPAREN
+        LPAREN paramList RPAREN
         LCURLY varDecl* stmt* RCURLY
     ;
 
+mainMethodDecl
+    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY stmt* RCURLY
+    ;
+
+paramList
+    : (param (COMMA param)*)?
+    ;
+
 param
-    : type name=ID
+    : type VARAGS? name=ID?
     ;
 
 stmt
     : expr EQUALS expr SEMI #AssignStmt //
     | RETURN expr SEMI #ReturnStmt
+    | expr SEMI #ExprStmt
+    | LCURLY stmt* RCURLY #BlockStmt
+    | ifStmt #IfCondition
+    | ifStmt elseStmt? #IfElseCondition
+    | whileStmt #WhileCondition
+    ;
+
+ifStmt
+    : IF LPAREN expr RPAREN stmt
+    | IF LPAREN expr RPAREN stmt LCURLY stmt* RCURLY
+    ;
+
+elseStmt
+    : ELSE stmt
+    | ELSE LCURLY stmt* RCURLY
+    ;
+
+whileStmt
+    : WHILE LPAREN expr RPAREN stmt
+    | WHILE LPAREN expr RPAREN stmt LCURLY stmt* RCURLY
     ;
 
 expr
     : LPAREN expr RPAREN #ParenExpr
-    | expr AND expr #LogicalOpExpr
-    | expr LT expr #RelationalOpExpr
+    | methodCall #MethodCallExpr
+    | newArrayExpr #NewArrayExpression
+    | newClassExpr #NewClassExpression
+    | arrayInitExpr #ArrayInitExpression
+    | expr op=AND expr #LogicalOpExpr
+    | expr op=LT expr #RelationalOpExpr
     | expr op=(MUL | DIV) expr #MulDivExpr
-    | expr op=(ADD | SUB) expr #AddSubExpr
+    | expr op=(ADD | SUB) expr #BinaryExpr
+    | op=NOT expr #NotExpr
     | value=INTEGER #IntegerLiteral
+    | value=BOOLEAN_VALUE #BooleanLiteral
     | name=ID #VarRefExpr
+    | arrayAccess #ArrayAccessExpr
+    | expr DOT LENGTH #ArrayLengthExpr
+    | expr DOT methodCall #MethodCallExpr
+    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
+    ;
+
+arrayAccess
+    : LPAREN? ID RPAREN? (LBRACK expr RBRACK)+
     ;
 
 
+methodCall
+    : name=ID LPAREN args? RPAREN
+    ;
 
+newArrayExpr
+    : NEW type LBRACK expr RBRACK
+    ;
 
+newClassExpr
+    : NEW name=ID LPAREN RPAREN
+    ;
+
+arrayInitExpr
+    : LBRACK (expr (COMMA expr)*)? RBRACK
+    ;
+
+args
+    : expr (COMMA expr)*
+    ;
