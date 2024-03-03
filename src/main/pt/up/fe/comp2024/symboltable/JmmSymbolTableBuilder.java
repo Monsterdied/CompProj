@@ -64,6 +64,9 @@ public class JmmSymbolTableBuilder {
                         is_array = true;
                     }
                     map.put(method.get("name"), new Type(type,is_array));});
+        if(classDecl.getChildren("MainMethodDecl").size() >0){
+            map.put("MainMethodDecl",new Type("void",false));
+        }
 
         return map;
     }
@@ -88,8 +91,11 @@ public class JmmSymbolTableBuilder {
                         );
         if(classDecl.getChildren("MainMethodDecl").size() >0){
             List<Symbol> symbols= new ArrayList<>();
-            var variable = classDecl.getChildren("MainMethodDecl").get(0).getChildren().get(0).getChildren().get(0).get("name");
-            symbols.add(new Symbol(new Type("String",true),variable));
+            classDecl.getChildren("MainMethodDecl").get(0).getAttributes().stream().forEach(token -> {if(token =="arg"){
+                symbols.add(new Symbol(new Type("String",true),classDecl.getChildren("MainMethodDecl").get(0).get("arg")));
+            }
+            });
+
             map.put("MainMethodDecl",symbols);
         }
         return map;
@@ -103,15 +109,23 @@ public class JmmSymbolTableBuilder {
 
         classDecl.getChildren(METHOD_DECL).stream()
                 .forEach(method -> map.put(method.get("name"), getLocalsList(method)));
+        if(classDecl.getChildren("MainMethodDecl").size() >0){
 
+        }
         return map;
     }
 
     private static List<String> buildMethods(JmmNode classDecl) {
-
-        return classDecl.getChildren(METHOD_DECL).stream()
+        List<String> methods = new ArrayList <>();
+        List<String> methods1 = classDecl.getChildren(METHOD_DECL).stream()
                 .map(method -> method.get("name"))
                 .toList();
+        methods.addAll(methods1);
+        var test = classDecl.getChildren("MainMethodDecl");
+        if(classDecl.getChildren("MainMethodDecl").size() >0){
+            methods.add("MainMethodDecl");
+        }
+        return methods;
     }
 
 

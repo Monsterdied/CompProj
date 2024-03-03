@@ -71,7 +71,6 @@ classDecl
 
 varDecl
     : type name=ID SEMI
-    | type  LBRACK RBRACK name=ID SEMI
     ;
 
 type
@@ -89,7 +88,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID MAIN LPAREN 'String' LBRACK RBRACK args RPAREN LCURLY stmt* RCURLY
+    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY stmt* RCURLY
     ;
 
 paramList
