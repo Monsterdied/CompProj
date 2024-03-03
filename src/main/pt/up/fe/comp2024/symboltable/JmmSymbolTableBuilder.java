@@ -21,6 +21,16 @@ public class JmmSymbolTableBuilder {
         var classDecl = root.getJmmChild(importsNodes.size());
         //SpecsCheck.checkArgument(Kind.CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
+        String[] superClass = {""};
+        //kinda works
+        classDecl.getAttributes().stream().forEach(token ->{
+            if(token == "parent"){
+                superClass[0] = classDecl.get("parent");
+            }}
+        );
+
+
+
         var methods = buildMethods(classDecl);
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
@@ -28,7 +38,7 @@ public class JmmSymbolTableBuilder {
         var fields = buildFields(classDecl);
 
 
-        return new JmmSymbolTable(className,imports,fields, methods, returnTypes, params, locals);
+        return new JmmSymbolTable(className, superClass[0],imports,fields, methods, returnTypes, params, locals);
     }
     private static List<String> buildImports(List<JmmNode> importsNodes) {
         List<String> imports = new ArrayList<>();
@@ -57,14 +67,14 @@ public class JmmSymbolTableBuilder {
 
         return map;
     }
-private static List<Symbol> buildFields(JmmNode classDecl){
-        List<Symbol> symbols = new ArrayList<>();
-    classDecl.getChildren(VAR_DECL).stream()
-            .forEach(var ->
-                    symbols.add(new Symbol(new Type(var.getChildren().get(0).get("name"),false),var.get("name")))
-            );
-    return symbols;
-}
+    private static List<Symbol> buildFields(JmmNode classDecl){
+            List<Symbol> symbols = new ArrayList<>();
+        classDecl.getChildren(VAR_DECL).stream()
+                .forEach(var ->
+                        symbols.add(new Symbol(new Type(var.getChildren().get(0).get("name"),false),var.get("name")))
+                );
+        return symbols;
+    }
     private static Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
         // TODO: Simple implementation that needs to be expanded
         Map<String, List<Symbol>> map = new HashMap<>();
@@ -79,7 +89,7 @@ private static List<Symbol> buildFields(JmmNode classDecl){
         if(classDecl.getChildren("MainMethodDecl").size() >0){
             List<Symbol> symbols= new ArrayList<>();
             var variable = classDecl.getChildren("MainMethodDecl").get(0).getChildren().get(0).getChildren().get(0).get("name");
-            symbols.add(new Symbol(new Type("string",false),variable));
+            symbols.add(new Symbol(new Type("String",true),variable));
             map.put("MainMethodDecl",symbols);
         }
         return map;
