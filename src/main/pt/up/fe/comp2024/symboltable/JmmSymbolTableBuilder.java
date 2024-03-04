@@ -138,5 +138,4 @@ public class JmmSymbolTableBuilder {
                 .map(varDecl -> new Symbol(intType, varDecl.get("name")))
                 .toList();
     }
-
 }

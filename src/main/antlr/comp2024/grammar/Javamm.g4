@@ -132,7 +132,7 @@ expr
     | arrayInitExpr #ArrayInitExpression
     | expr op=AND expr #LogicalOpExpr
     | expr op=LT expr #RelationalOpExpr
-    | expr op=(MUL | DIV) expr #MulDivExpr
+    | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
     | op=NOT expr #NotExpr
     | value=INTEGER #IntegerLiteral
