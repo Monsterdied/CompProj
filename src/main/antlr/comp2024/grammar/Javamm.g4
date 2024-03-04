@@ -104,24 +104,16 @@ stmt
     | RETURN expr SEMI #ReturnStmt
     | expr SEMI #ExprStmt
     | LCURLY stmt* RCURLY #BlockStmt
-    | ifStmt #IfCondition
-    | ifStmt elseStmt? #IfElseCondition
+    | ifStmt #IfElseStmt
     | whileStmt #WhileCondition
     ;
 
 ifStmt
-    : IF LPAREN expr RPAREN stmt
-    | IF LPAREN expr RPAREN stmt LCURLY stmt* RCURLY
-    ;
-
-elseStmt
-    : ELSE stmt
-    | ELSE LCURLY stmt* RCURLY
+    : IF LPAREN expr RPAREN stmt ELSE stmt
     ;
 
 whileStmt
     : WHILE LPAREN expr RPAREN stmt
-    | WHILE LPAREN expr RPAREN stmt LCURLY stmt* RCURLY
     ;
 
 expr
