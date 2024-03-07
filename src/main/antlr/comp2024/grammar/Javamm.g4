@@ -91,7 +91,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 returnStmt
-    : RETURN expr SEMI
+    : RETURN expr SEMI #ReturnExpr
     ;
 
 mainMethodDecl
