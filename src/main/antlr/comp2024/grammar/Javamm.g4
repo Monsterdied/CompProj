@@ -80,17 +80,22 @@ type
     | name= INT
     | name= BOOLEAN
     | name= ID
-    | name= 'String';
+    | name= 'String'
+    ;
 
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
         type name=ID
         LPAREN paramList RPAREN
-        LCURLY varDecl* stmt* RCURLY
+        LCURLY varDecl* stmt* returnStmt RCURLY
+    ;
+
+returnStmt
+    : RETURN expr SEMI
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)?  RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
@@ -98,16 +103,18 @@ paramList
     ;
 
 param
-    : type VARAGS? name=ID?
+    : type VARAGS? name=ID
     ;
 
+
 stmt
-    : expr EQUALS expr SEMI #AssignStmt //
-    | RETURN expr SEMI #ReturnStmt
-    | expr SEMI #ExprStmt
+    : expr EQUALS expr SEMI #AssignStmt
     | LCURLY stmt* RCURLY #BlockStmt
     | ifStmt #IfElseStmt
     | whileStmt #WhileCondition
+    | ID SEMI   #VarDeclStmt
+    | ID EQUALS expr SEMI #VarAssignStmt
+    | ID LBRACK expr RBRACK EQUALS expr SEMI #ArrayAssignStmt
     ;
 
 ifStmt
@@ -121,10 +128,10 @@ whileStmt
 expr
     : LPAREN expr RPAREN #ParenExpr
     | THIS #ThisExpr
-    | methodCall #MethodCallExpr
-    | newArrayExpr #NewArrayExpression
-    | newClassExpr #NewClassExpression
-    | arrayInitExpr #ArrayInitExpression
+    | name=ID LPAREN args? RPAREN #MethodCallExpr
+    | NEW type LBRACK expr RBRACK #NewArrayExpression
+    | NEW name=ID LPAREN RPAREN #NewClassExpression
+    | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
     | expr op=AND expr #BinaryExpr
     | expr op=LT expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
@@ -133,31 +140,10 @@ expr
     | value=INTEGER #IntegerLiteral
     | value=BOOLEAN_VALUE #BooleanLiteral
     | name=ID #VarRefExpr
-    | arrayAccess #ArrayAccessExpr
+    | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
     | expr DOT LENGTH #ArrayLengthExpr
-    | expr DOT methodCall #MethodCallExpr
+    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
-    ;
-
-arrayAccess
-    : LPAREN? ID RPAREN? (LBRACK expr RBRACK)+
-    ;
-
-
-methodCall
-    : name=ID LPAREN args? RPAREN
-    ;
-
-newArrayExpr
-    : NEW type LBRACK expr RBRACK
-    ;
-
-newClassExpr
-    : NEW name=ID LPAREN RPAREN
-    ;
-
-arrayInitExpr
-    : LBRACK (expr (COMMA expr)*)? RBRACK
     ;
 
 args
