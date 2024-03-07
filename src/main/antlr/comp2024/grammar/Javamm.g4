@@ -39,6 +39,7 @@ STATIC : 'static' ;
 VOID : 'void' ;
 MAIN : 'main' ;
 LENGTH : 'length' ;
+THIS: 'this' ;
 
 INTEGER : '0' | [1-9] [0-9]*;
 BOOLEAN_VALUE : 'true' | 'false' ;
@@ -119,6 +120,7 @@ whileStmt
 
 expr
     : LPAREN expr RPAREN #ParenExpr
+    | THIS #ThisExpr
     | methodCall #MethodCallExpr
     | newArrayExpr #NewArrayExpression
     | newClassExpr #NewClassExpression
