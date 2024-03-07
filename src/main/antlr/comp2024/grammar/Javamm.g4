@@ -39,7 +39,7 @@ STATIC : 'static' ;
 VOID : 'void' ;
 MAIN : 'main' ;
 LENGTH : 'length' ;
-THIS: 'this' ;
+THIS : 'this' ;
 
 INTEGER : '0' | [1-9] [0-9]*;
 BOOLEAN_VALUE : 'true' | 'false' ;
@@ -90,7 +90,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID 'main' LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
@@ -121,10 +121,10 @@ whileStmt
 expr
     : LPAREN expr RPAREN #ParenExpr
     | THIS #ThisExpr
-    | methodCall #MethodCallExpr
-    | newArrayExpr #NewArrayExpression
-    | newClassExpr #NewClassExpression
-    | arrayInitExpr #ArrayInitExpression
+    | name=ID LPAREN args? RPAREN #MethodCallExpr
+    | NEW type LBRACK expr RBRACK #NewArrayExpression
+    | NEW name=ID LPAREN RPAREN #NewClassExpression
+    | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
     | expr op=AND expr #BinaryExpr
     | expr op=LT expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
@@ -133,31 +133,10 @@ expr
     | value=INTEGER #IntegerLiteral
     | value=BOOLEAN_VALUE #BooleanLiteral
     | name=ID #VarRefExpr
-    | arrayAccess #ArrayAccessExpr
+    | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
     | expr DOT LENGTH #ArrayLengthExpr
-    | expr DOT methodCall #MethodCallExpr
+    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
-    ;
-
-arrayAccess
-    : LPAREN? ID RPAREN? (LBRACK expr RBRACK)+
-    ;
-
-
-methodCall
-    : name=ID LPAREN args? RPAREN
-    ;
-
-newArrayExpr
-    : NEW type LBRACK expr RBRACK
-    ;
-
-newClassExpr
-    : NEW name=ID LPAREN RPAREN
-    ;
-
-arrayInitExpr
-    : LBRACK (expr (COMMA expr)*)? RBRACK
     ;
 
 args
