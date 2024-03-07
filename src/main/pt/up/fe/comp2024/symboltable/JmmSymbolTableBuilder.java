@@ -15,28 +15,23 @@ public class JmmSymbolTableBuilder {
 
 
     public static JmmSymbolTable build(JmmNode root) {
-        int i = 0;
         var importsNodes = root.getChildren("ImportDecl");
         List<String> imports = buildImports(importsNodes);
         var classDecl = root.getJmmChild(importsNodes.size());
-        //SpecsCheck.checkArgument(Kind.CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
-        String className = classDecl.get("name");
-        String[] superClass = {""};
-        //kinda works
-        classDecl.getAttributes().stream().forEach(token ->{
-            if(token == "parent"){
-                superClass[0] = classDecl.get("parent");
-            }}
-        );
-
-
-
         var methods = buildMethods(classDecl);
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
         var fields = buildFields(classDecl);
 
+
+        String className = classDecl.get("name");
+        String[] superClass = {""};
+        classDecl.getAttributes().stream().forEach(token ->{
+            if(token == "parent"){
+                superClass[0] = classDecl.get("parent");
+            }}
+        );
 
         return new JmmSymbolTable(className, superClass[0],imports,fields, methods, returnTypes, params, locals);
     }
@@ -65,7 +60,7 @@ public class JmmSymbolTableBuilder {
                     }
                     map.put(method.get("name"), new Type(type,is_array));});
         if(classDecl.getChildren("MainMethodDecl").size() >0){
-            map.put("MainMethodDecl",new Type("void",false));
+            map.put("main",new Type("void",false));
         }
 
         return map;
@@ -96,7 +91,7 @@ public class JmmSymbolTableBuilder {
             }
             });
 
-            map.put("MainMethodDecl",symbols);
+            map.put("main",symbols);
         }
         return map;
     }
@@ -109,9 +104,9 @@ public class JmmSymbolTableBuilder {
 
         classDecl.getChildren(METHOD_DECL).stream()
                 .forEach(method -> map.put(method.get("name"), getLocalsList(method)));
-        if(classDecl.getChildren("MainMethodDecl").size() >0){
-
-        }
+        classDecl.getChildren("MainMethodDecl").forEach(
+                method -> map.put("main", getLocalsList(method))
+        );
         return map;
     }
 
@@ -121,9 +116,8 @@ public class JmmSymbolTableBuilder {
                 .map(method -> method.get("name"))
                 .toList();
         methods.addAll(methods1);
-        var test = classDecl.getChildren("MainMethodDecl");
         if(classDecl.getChildren("MainMethodDecl").size() >0){
-            methods.add("MainMethodDecl");
+            methods.add("main");
         }
         return methods;
     }

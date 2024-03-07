@@ -89,7 +89,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID 'main' LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
