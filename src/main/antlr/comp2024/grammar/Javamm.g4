@@ -83,7 +83,10 @@ type
     | name= 'String';
 
 methodDecl locals[boolean isPublic=false]
-    : (PUBLIC {$isPublic=true;})? type name=ID LPAREN paramList RPAREN LCURLY varDecl* stmt* RCURLY
+    : (PUBLIC {$isPublic=true;})?
+        type name=ID
+        LPAREN paramList RPAREN
+        LCURLY varDecl* stmt* RCURLY
     ;
 
 mainMethodDecl
@@ -99,15 +102,13 @@ param
     ;
 
 stmt
-    : LCURLY stmt* RCURLY #BlockStmt
+    : expr EQUALS expr SEMI #AssignStmt //
+    | RETURN expr SEMI #ReturnStmt
+    | expr SEMI #ExprStmt
+    | LCURLY stmt* RCURLY #BlockStmt
     | ifStmt #IfElseStmt
     | whileStmt #WhileCondition
-    | expr SEMI #ExprStmt
-    | name=ID EQUALS expr SEMI #AssignStmt
-    | name=ID LBRACK expr RBRACK EQUALS expr SEMI #ArrayAssignStmt
-    | RETURN expr SEMI #ReturnStmt
     ;
-
 
 ifStmt
     : IF LPAREN expr RPAREN stmt ELSE stmt
@@ -138,7 +139,7 @@ expr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     ;
 
-
 args
     : expr (COMMA expr)*
     ;
+
