@@ -20,6 +20,10 @@ ADD : '+' ;
 SUB : '-' ;
 AND : '&&' ;
 LT : '<' ;
+OR : '||';
+GT : '>' ;
+LE : '<=' ;
+GE : '>=' ;
 NOT: '!' ;
 VARAGS: '...' ;
 
@@ -125,8 +129,8 @@ expr
     | NEW type LBRACK expr RBRACK #NewArrayExpression
     | NEW name=ID LPAREN RPAREN #NewClassExpression
     | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
-    | expr op=AND expr #BinaryExpr
-    | expr op=LT expr #BinaryExpr
+    | expr op=(AND | OR) expr #BinaryExpr
+    | expr op=(LT | LE | GT | GE) expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
     | op=NOT expr #NotExpr
