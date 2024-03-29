@@ -8,8 +8,11 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
+import java.lang.invoke.SwitchPoint;
 import java.util.ArrayList;
+//import java.util.HashMap;
 import java.util.List;
+//import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.specs.comp.ollir.ElementType.VOID;
@@ -31,6 +34,7 @@ public class JasminGenerator {
     String code;
 
     Method currentMethod;
+    //Map<String,Descriptor> varTable = new HashMap<>();
 
     private final FunctionClassMap<TreeNode, String> generators;
 
@@ -199,7 +203,16 @@ public class JasminGenerator {
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
 
         // TODO: Hardcoded for int type, needs to be expanded
-        code.append("istore ").append(reg).append(NL);
+        ElementType type = operand.getType().getTypeOfElement();
+        String fill = reg > 3 ? " " : "_";
+        switch (type) {
+            case INT32 -> code.append("istore");
+            case BOOLEAN -> code.append("istore");
+            case ARRAYREF -> code.append("astore");
+            case OBJECTREF -> code.append("astore");
+            default -> throw new NotImplementedException(type);
+        }
+        code.append(fill).append(reg);
 
         return code.toString();
     }
@@ -209,17 +222,19 @@ public class JasminGenerator {
         var test =(Operand) call.getCaller();
         switch (call.getInvocationType()){
             case NEW:
+                //only works for methods now
                 code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
                 code.append("dup").append(NL);
                 for (var arg : call.getArguments()) {
                     code.append(generators.apply(arg));
                 }
-                code.append("invokespecial ").append("<init>(");
+                //probably wrong
+                code.append("invokespecial ").append(field_to_jasmin(call.getReturnType())).append("/<init>(");
                 for (var arg : call.getArguments()) {
                     code.append(field_to_jasmin(arg.getType()));
                 }
-                code.append(")");
-                code.append(field_to_jasmin(call.getReturnType())).append(NL);
+                code.append(")V").append(NL);
+                code.append(StoreElement(call.getCaller()));
                 break;
         }
         //code.append(generators.apply(call.getCaller()));
@@ -245,6 +260,20 @@ public class JasminGenerator {
         // get register
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
         return "iload " + reg + NL;
+    }
+    private String StoreElement(Element element) {
+        // get register
+        /*switch(element.getTypeOfElement()){
+            case ARRAYREF -> {
+                var test = ((Operand) element).getName();
+                var reg = currentMethod.getVarTable().get(((Operand) element).getName()).getVirtualReg();
+                return "astore " + (reg < 4 ? "_": " ") +reg + NL;
+            }
+        }*/   /*
+        var test = operand.getName();
+        var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
+        return "astore " + (reg < 4 ? "_": " ") +reg + NL;*/
+        return "";
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
