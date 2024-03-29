@@ -50,6 +50,7 @@ public class JasminGenerator {
         generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
+        generators.put(CallInstruction.class, this::generateCallInstruction);
     }
 
     public List<Report> getReports() {
@@ -131,7 +132,7 @@ public class JasminGenerator {
                 ArrayType t = (ArrayType) type;
                 return "[" + field_to_jasmin(t.getElementType());
             case OBJECTREF:
-                return "To be implemented";
+                return ((ClassType) type).getName();
             default:
                 return TypeToJasmin(type);
         }
@@ -204,15 +205,29 @@ public class JasminGenerator {
     }
     private String generateCallInstruction(CallInstruction call){
         var code = new StringBuilder();
-        return code.toString();
         // load arguments
-        /*
-        for (var arg : call.getArgs()) {
-            code.append(generators.apply(arg));
+        var test =(Operand) call.getCaller();
+        switch (call.getInvocationType()){
+            case NEW:
+                code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
+                code.append("dup").append(NL);
+                for (var arg : call.getArguments()) {
+                    code.append(generators.apply(arg));
+                }
+                code.append("invokespecial ").append("<init>(");
+                for (var arg : call.getArguments()) {
+                    code.append(field_to_jasmin(arg.getType()));
+                }
+                code.append(")");
+                code.append(field_to_jasmin(call.getReturnType())).append(NL);
+                break;
         }
+        //code.append(generators.apply(call.getCaller()));
+        return code.toString();
         // invoke method
-        code.append("invokestatic ").append(call.getClassName()).append("/").append(call.getMethodName()).append("(");
-        for (var arg : call.getArgs()) {
+/*
+        code.append("invokestatic ").append(call.getClass().getName()).append("/").append(test.getName()).append("(");
+        for (var arg : call.getArguments()) {
             code.append(field_to_jasmin(arg.getType()));
         }
         code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
