@@ -4,8 +4,11 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ollir.OllirUtils;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
+
+import java.util.Objects;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
 
@@ -127,11 +130,21 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // name
         var name = node.get("name");
+        if(node.get("name")=="main"){
+            System.out.print(node);
+        }
         code.append(name);
 
         // param
-        var paramCode = visit(node.getJmmChild(1));
-        code.append("(" + paramCode + ")");
+        StringBuilder paramCode = new StringBuilder();
+        for (var param : node.getJmmChild(1).getChildren()) {
+            paramCode.append(visitParam(param, unused));
+            paramCode.append(", ");
+        }
+        if (paramCode.length() > 0) {
+            paramCode.delete(paramCode.length() - 2, paramCode.length());
+        }
+        code.append("(").append(paramCode).append(")");
 
         // type
         var retType = OptUtils.toOllirType(node.getJmmChild(0));
@@ -158,10 +171,18 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
+        //Get class name
         code.append(table.getClassName());
-        code.append(L_BRACKET);
 
+        //Get super class if it exists
+        if (this.table.getSuper() != null && !Objects.equals(this.table.getSuper(), "")) {
+            code.append(" extends ").append(this.table.getSuper());
+        }
+        code.append(L_BRACKET);
         code.append(NL);
+
+        //Get Class fields
+        code.append(OptUtils.getFields(this.table.getFields()));
         var needNl = true;
 
         for (var child : node.getChildren()) {
@@ -192,6 +213,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitProgram(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
+        for(var imports : this.table.getImports()) {
+            code.append(String.format("import %s;", imports));
+            code.append(NL);
+        }
 
         node.getChildren().stream()
                 .map(this::visit)
