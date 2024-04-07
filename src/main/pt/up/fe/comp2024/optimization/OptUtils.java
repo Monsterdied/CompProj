@@ -44,7 +44,7 @@ public class OptUtils {
         return toOllirType(type.getName());
     }
 
-    private static String toOllirType(String typeName) {
+    public static String toOllirType(String typeName) {
 
         String type = "." + switch (typeName) {
             case "int" -> "i32";

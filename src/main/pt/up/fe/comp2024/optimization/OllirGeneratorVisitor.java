@@ -39,15 +39,45 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     protected void buildVisitor() {
 
         addVisit(PROGRAM, this::visitProgram);
+        addVisit(IMPORT_DECL,this::visitImport);
         addVisit(CLASS_DECL, this::visitClass);
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(PARAM, this::visitParam);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
-
+        addVisit(EXPR_STMT, this::visitExprStmt);
+        addVisit(MAIN_METHOD_DECL, this::visitMainMethodDecl);
         setDefaultVisit(this::defaultVisit);
     }
 
+    private String visitImport(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        code.append(String.format("import %s;",node.get("ID"))).append(NL);
+        return code.toString();
+    }
+
+
+    private String visitExprStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        code.append(String.format("invokestatic(%s, ", node.getChildren().get(0).getChildren().get(0).get("name")));
+        code.append("\"").append(node.getChildren().get(0).get("name")).append("\", ");
+        String type = "";
+        var children = node.getChildren().get(0).getChildren().get(1).getChildren();
+        for (int i = 0; i < children.size(); i++) {
+            var child = children.get(i);
+
+            for(var locals : this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow())) {
+                if (Objects.equals(locals.getName(), child.get("name")))
+                    type = locals.getType().getName();
+            }
+            code.append(String.format("%s%s", child.get("name"), OptUtils.toOllirType(type)));
+            if (i < children.size() - 1) {
+                code.append(", ");
+            }
+        }
+        code.append(").V;").append(NL);
+        return code.toString();
+    }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
 
@@ -117,7 +147,13 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code;
     }
 
-
+    private String visitMainMethodDecl(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        code.append(".method public static main(args.array.String).V {").append(NL);
+        code.append("ret.V ;").append(NL);
+        code.append(R_BRACKET).append(NL);
+        return code.toString();
+    }
     private String visitMethodDecl(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder(".method ");
@@ -130,9 +166,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // name
         var name = node.get("name");
-        if(node.get("name")=="main"){
-            System.out.print(node);
-        }
         code.append(name);
 
         // param
@@ -202,6 +235,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+
     private String buildConstructor() {
 
         return ".construct " + table.getClassName() + "().V {\n" +
@@ -213,10 +247,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitProgram(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
-        for(var imports : this.table.getImports()) {
-            code.append(String.format("import %s;", imports));
-            code.append(NL);
-        }
+
 
         node.getChildren().stream()
                 .map(this::visit)
