@@ -145,10 +145,19 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
-        var expr = OllirExprResult.EMPTY;
+        OllirExprResult expr = OllirExprResult.EMPTY;
 
         if (node.getNumChildren() > 0) {
-            expr = exprVisitor.visit(node.getJmmChild(0));
+            var exp = node.getChildren().get(0);
+
+            //Variável no return
+            if (Objects.equals(exp.getKind(), VAR_REF_EXPR.toString())){
+                //Fazer uma função para ver que tipo de variável é
+                expr = new OllirExprResult(exp.get("name")+"."+"i32","");
+            } else {
+                expr = exprVisitor.visit(exp);
+            }
+
         }
 
         code.append(expr.getComputation());
