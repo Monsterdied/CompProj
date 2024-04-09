@@ -64,5 +64,7 @@ public class OptUtils {
         return code.toString();
     }
 
-
+    public static boolean isStatic(String name, List<String> imports) {
+        return imports.contains(name);
+    }
 }

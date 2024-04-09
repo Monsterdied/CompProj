@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ollir.OllirUtils;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
+import java.util.List;
 import java.util.Objects;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
@@ -58,9 +59,27 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitExprStmt(JmmNode node, Void unused) {
+
         StringBuilder code = new StringBuilder();
-        code.append(String.format("invokestatic(%s, ", node.getChildren().get(0).getChildren().get(0).get("name")));
-        code.append("\"").append(node.getChildren().get(0).get("name")).append("\", ");
+
+        String methodNodeName = node.getChildren().get(0).getChildren().get(0).get("name");
+        List<String> imports = table.getImports();
+        boolean isStatic = OptUtils.isStatic(methodNodeName, imports);
+        String type_virtual = "";
+        for(var locals: this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow())){
+            var a  = locals.getName();
+            if(Objects.equals(methodNodeName, locals.getName()))
+                type_virtual= locals.getType().getName();
+        }
+        if(isStatic){
+            code.append(String.format("invokestatic(%s, ", methodNodeName));
+            code.append("\"").append(node.getChildren().get(0).get("name")).append("\", ");
+        }
+        else {
+            //var a = this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+
+            code.append(String.format("invokevirtual(%s.%s, %s, ", methodNodeName, type_virtual, "\"" + node.getChildren().get(0).get("name") + "\""));
+        }
         String type = "";
         var children = node.getChildren().get(0).getChildren().get(1).getChildren();
         for (int i = 0; i < children.size(); i++) {
@@ -75,7 +94,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 code.append(", ");
             }
         }
-        code.append(").V;").append(NL);
+
+        if(isStatic){
+            code.append(").V;").append(NL);
+        }
+        else{
+            code.append(")."+type_virtual+";").append(NL);
+        }
+
+
         return code.toString();
     }
 

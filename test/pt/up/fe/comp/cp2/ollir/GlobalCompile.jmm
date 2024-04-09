@@ -1,4 +1,7 @@
-class CompileAssignment {
+import io;
+import A;
+
+class CompileMethodInvocation {
 
     public static void main(String[] args) {
 
@@ -6,12 +9,14 @@ class CompileAssignment {
 
     public int foo() {
         int a;
-        int b;
+        boolean bol;
+        A b;
 
-        b = 2;
-
-        a = b;
-
-        return (b + a);
+        a = 1;
+        b.some(a);
+        io.println(a);
+        return 0;
     }
 }
+
+
