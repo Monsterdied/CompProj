@@ -49,19 +49,10 @@ public class OptUtils {
         String type = "." + switch (typeName) {
             case "int" -> "i32";
             case "boolean" -> "bool";
-            default -> throw new NotImplementedException(typeName);
+            default -> typeName;
         };
 
         return type;
-    }
-
-    public static String getFields(List<Symbol> fields){
-        StringBuilder code = new StringBuilder();
-        for (Symbol field : fields) {
-            code.append(String.format(".field public %s;", field.getName()+toOllirType(field.getType().getName())));
-            code.append("\n");
-        }
-        return code.toString();
     }
 
     public static boolean isStatic(String name, List<String> imports) {

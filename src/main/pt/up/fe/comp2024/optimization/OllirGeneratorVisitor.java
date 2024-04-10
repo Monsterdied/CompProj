@@ -42,13 +42,26 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(PROGRAM, this::visitProgram);
         addVisit(IMPORT_DECL,this::visitImport);
         addVisit(CLASS_DECL, this::visitClass);
+        addVisit(VAR_DECL, this::visitVarDecl);
         addVisit(METHOD_DECL, this::visitMethodDecl);
+        addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(PARAM, this::visitParam);
         addVisit(RETURN_STMT, this::visitReturn);
-        addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(EXPR_STMT, this::visitExprStmt);
         addVisit(MAIN_METHOD_DECL, this::visitMainMethodDecl);
         setDefaultVisit(this::defaultVisit);
+    }
+
+    private String visitProgram(JmmNode node, Void unused) {
+
+        StringBuilder code = new StringBuilder();
+
+
+        node.getChildren().stream()
+                .map(this::visit)
+                .forEach(code::append);
+
+        return code.toString();
     }
 
     private String visitImport(JmmNode node, Void unused) {
@@ -57,7 +70,71 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    private String visitClass(JmmNode node, Void unused) {
 
+        StringBuilder code = new StringBuilder();
+
+        //Get class name
+        code.append(table.getClassName());
+
+        //Get super class if it exists
+        if (this.table.getSuper() != null && !Objects.equals(this.table.getSuper(), "")) {
+            code.append(" extends ").append(this.table.getSuper());
+        }
+        code.append(L_BRACKET);
+        code.append(NL);
+
+
+        var needNl = true;
+
+        for (var child : node.getChildren()) {
+            var result = visit(child);
+
+            if (METHOD_DECL.check(child) && needNl) {
+                code.append(NL);
+                needNl = false;
+            }
+
+            code.append(result);
+        }
+
+        code.append(buildConstructor());
+        code.append(R_BRACKET);
+
+        return code.toString();
+    }
+
+    private String visitVarDecl(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
+        var parent = node.getParent();
+        var id = node.get("name");
+
+        //Declared in class
+        if(parent.getKind().equals("ClassDecl")){
+            code.append(String.format(".field public %s",id));
+
+            for(var field: this.table.getFields()){
+                if(field.getName().equals(id)){
+                    //Array
+                    if(field.getType().isArray()){
+                        code.append(".array");
+                        code.append(OptUtils.toOllirType(field.getType().getName()));
+                    }
+                    //Other types
+                    else {
+                        code.append(OptUtils.toOllirType(field.getType().getName()));
+                    }
+                }
+            }
+            code.append(";\n");
+        }
+
+
+
+        return code.toString();
+    }
+    
     private String visitExprStmt(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
@@ -172,7 +249,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-
     private String visitParam(JmmNode node, Void unused) {
 
         var typeCode = OptUtils.toOllirType(node.getJmmChild(0));
@@ -190,6 +266,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(R_BRACKET).append(NL);
         return code.toString();
     }
+
     private String visitMethodDecl(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder(".method ");
@@ -236,40 +313,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
 
-    private String visitClass(JmmNode node, Void unused) {
 
-        StringBuilder code = new StringBuilder();
-
-        //Get class name
-        code.append(table.getClassName());
-
-        //Get super class if it exists
-        if (this.table.getSuper() != null && !Objects.equals(this.table.getSuper(), "")) {
-            code.append(" extends ").append(this.table.getSuper());
-        }
-        code.append(L_BRACKET);
-        code.append(NL);
-
-        //Get Class fields
-        code.append(OptUtils.getFields(this.table.getFields()));
-        var needNl = true;
-
-        for (var child : node.getChildren()) {
-            var result = visit(child);
-
-            if (METHOD_DECL.check(child) && needNl) {
-                code.append(NL);
-                needNl = false;
-            }
-
-            code.append(result);
-        }
-
-        code.append(buildConstructor());
-        code.append(R_BRACKET);
-
-        return code.toString();
-    }
 
 
     private String buildConstructor() {
@@ -280,17 +324,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
 
-    private String visitProgram(JmmNode node, Void unused) {
 
-        StringBuilder code = new StringBuilder();
-
-
-        node.getChildren().stream()
-                .map(this::visit)
-                .forEach(code::append);
-
-        return code.toString();
-    }
 
     /**
      * Default visitor. Visits every child node and return an empty string.
