@@ -134,7 +134,52 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         return code.toString();
     }
-    
+
+    private String visitMethodDecl(JmmNode node, Void unused) {
+
+        StringBuilder code = new StringBuilder(".method ");
+
+        boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
+
+        if (isPublic) {
+            code.append("public ");
+        }
+
+        // name
+        var name = node.get("name");
+        code.append(name);
+
+        // param
+        StringBuilder paramCode = new StringBuilder();
+        for (var param : node.getJmmChild(1).getChildren()) {
+            paramCode.append(visitParam(param, unused));
+            paramCode.append(", ");
+        }
+        if (paramCode.length() > 0) {
+            paramCode.delete(paramCode.length() - 2, paramCode.length());
+        }
+        code.append("(").append(paramCode).append(")");
+
+        // type
+        var retType = OptUtils.toOllirType(node.getJmmChild(0));
+        code.append(retType);
+        code.append(L_BRACKET);
+
+
+        // rest of its children stmts
+        var afterParam = 2;
+        for (int i = afterParam; i < node.getNumChildren(); i++) {
+            var child = node.getJmmChild(i);
+            var childCode = visit(child);
+            code.append(childCode);
+        }
+
+        code.append(R_BRACKET);
+        code.append(NL);
+
+        return code.toString();
+    }
+
     private String visitExprStmt(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
@@ -214,7 +259,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-
     private String visitReturn(JmmNode node, Void unused) {
 
         String methodName = node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow();
@@ -267,50 +311,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-    private String visitMethodDecl(JmmNode node, Void unused) {
-
-        StringBuilder code = new StringBuilder(".method ");
-
-        boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
-
-        if (isPublic) {
-            code.append("public ");
-        }
-
-        // name
-        var name = node.get("name");
-        code.append(name);
-
-        // param
-        StringBuilder paramCode = new StringBuilder();
-        for (var param : node.getJmmChild(1).getChildren()) {
-            paramCode.append(visitParam(param, unused));
-            paramCode.append(", ");
-        }
-        if (paramCode.length() > 0) {
-            paramCode.delete(paramCode.length() - 2, paramCode.length());
-        }
-        code.append("(").append(paramCode).append(")");
-
-        // type
-        var retType = OptUtils.toOllirType(node.getJmmChild(0));
-        code.append(retType);
-        code.append(L_BRACKET);
-
-
-        // rest of its children stmts
-        var afterParam = 2;
-        for (int i = afterParam; i < node.getNumChildren(); i++) {
-            var child = node.getJmmChild(i);
-            var childCode = visit(child);
-            code.append(childCode);
-        }
-
-        code.append(R_BRACKET);
-        code.append(NL);
-
-        return code.toString();
-    }
 
 
 
