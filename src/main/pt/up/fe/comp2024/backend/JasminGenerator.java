@@ -9,12 +9,14 @@ import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.lang.invoke.SwitchPoint;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 //import java.util.HashMap;
 import java.util.List;
 //import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.specs.comp.ollir.ElementType.ARRAYREF;
 import static org.specs.comp.ollir.ElementType.VOID;
 
 /**
@@ -95,11 +97,7 @@ public class JasminGenerator {
                 .end method
                 """;
         code.append(defaultConstructor);*/
-        code.append(".method public <init>()V").append(NL)
-                .append(TAB).append("aload_0").append(NL)
-                .append(TAB).append("invokespecial ").append(superClass).append("/<init>()V").append(NL)
-                .append(TAB).append("return").append(NL)
-                .append(".end method").append(NL);
+
         // generate code for all other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
 
@@ -107,12 +105,19 @@ public class JasminGenerator {
             // that receives no arguments, and has been already added
             // previously
             if (method.isConstructMethod()) {
+                code.append(".method public <init>()V").append(NL)
+                        .append(TAB).append("aload_0").append(NL)
+                        .append(TAB).append("invokespecial ").append(superClass).append("/<init>(");
+                        for (var param : method.getParams()) {
+                            code.append(field_to_jasmin(param.getType()));
+                        }
+                                code.append(")V").append(NL)
+                        .append(TAB).append("return").append(NL)
+                        .append(".end method").append(NL);
                 continue;
             }
-
             code.append(generators.apply(method));
         }
-
         return code.toString();
     }
     private String TypeToJasmin(Type type){
@@ -125,6 +130,22 @@ public class JasminGenerator {
                 return "V";
             case STRING:
                 return "Ljava/lang/String;";
+            case OBJECTREF:
+                return getClass(((ClassType) type).getName());
+            default:
+                return null;
+        }
+    }
+    private String TypeToJasminArrayType(Type type){
+        switch (type.getTypeOfElement()){
+            case INT32:
+                return "int";
+            case BOOLEAN:
+                return "boolean";
+            case STRING:
+                return "Ljava/lang/String;";
+            case OBJECTREF:
+                return getClass(((ClassType) type).getName());
             default:
                 return null;
         }
@@ -135,8 +156,6 @@ public class JasminGenerator {
             case ARRAYREF:
                 ArrayType t = (ArrayType) type;
                 return "[" + field_to_jasmin(t.getElementType());
-            case OBJECTREF:
-                return ((ClassType) type).getName();
             default:
                 return TypeToJasmin(type);
         }
@@ -160,7 +179,7 @@ public class JasminGenerator {
                 return name;
             }
         }
-        return "";
+        return className;
     }
     private String GetFieldInstruction(GetFieldInstruction getFieldInstruction){
         var code = new StringBuilder();
@@ -248,26 +267,58 @@ public class JasminGenerator {
     private String generateCallInstruction(CallInstruction call){
         var code = new StringBuilder();
         // load arguments
-        var test =(Operand) call.getCaller();
         switch (call.getInvocationType()){
-            case NEW:
-                //only works for methods now
-                code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
-                code.append("dup").append(NL);
-                for (var arg : call.getArguments()) {
-                    code.append(generators.apply(arg));
-                }
-                //probably wrong
-                code.append("invokespecial ").append(field_to_jasmin(call.getReturnType())).append("/<init>(");
-                for (var arg : call.getArguments()) {
-                    code.append(field_to_jasmin(arg.getType()));
-                }
-                code.append(")V").append(NL);
-                break;
+            case invokestatic -> code.append(DealWithInvokeStatic(call));
+            case invokespecial -> code.append(DealWithInvokeSpecial(call));
+            case NEW -> code.append(DealWithNew(call));
         }
         //code.append(generators.apply(call.getCaller()));
         return code.toString();
         // invoke method
+    }
+    public static String removeQuotes(String input) {
+        return input.replaceAll("^\"|\"$", "");
+    }
+    private String DealWithInvokeStatic(CallInstruction call){
+        var code = new StringBuilder();
+        //probably wrong
+        for (var arg : call.getArguments()) {
+            code.append(generators.apply(arg));
+        }
+        code.append("invokestatic ").append(getClass(((Operand)call.getCaller()).getName()));
+        code.append(".").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
+        code.append("(");
+        for (var arg : call.getArguments()) {
+            code.append(field_to_jasmin(arg.getType()));
+        }
+        code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
+        return code.toString();
+    }
+    private String DealWithInvokeSpecial(CallInstruction call){
+        var code = new StringBuilder();
+        for (var arg : call.getArguments()) {
+            code.append(generators.apply(arg));
+        }
+        //probably wrong
+        code.append("invokespecial ").append(field_to_jasmin(call.getCaller().getType())).append("/<init>(");
+        for (var arg : call.getArguments()) {
+            code.append(field_to_jasmin(arg.getType()));
+        }
+        code.append(")V").append(NL);
+        return code.toString();
+    }
+    private String DealWithNew(CallInstruction call){
+        var code = new StringBuilder();
+        if (call.getReturnType().getTypeOfElement()  == ARRAYREF){
+            code.append(generators.apply(call.getOperands().get(1)));
+            ArrayType array = (ArrayType) call.getReturnType();
+
+            code.append("newarray ").append(TypeToJasminArrayType(array.getElementType())).append(NL);
+        }else {
+            code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
+            code.append("dup").append(NL);
+        }
+        return code.toString();
     }
     private String generateSingleOp(SingleOpInstruction singleOp) {
         return generators.apply(singleOp.getSingleOperand());
@@ -323,6 +374,7 @@ public class JasminGenerator {
             case INT32 -> code.append("ireturn").append(NL);
             case BOOLEAN -> code.append("ireturn").append(NL);
             case ARRAYREF -> code.append("areturn").append(NL);
+            case OBJECTREF -> code.append("areturn").append(NL);
             default -> throw new NotImplementedException(returnInst.getReturnType().getTypeOfElement());
         }
         //code.append(generators.apply(returnInst.getOperand()));
