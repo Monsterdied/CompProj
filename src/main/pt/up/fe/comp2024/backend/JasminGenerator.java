@@ -270,6 +270,7 @@ public class JasminGenerator {
         switch (call.getInvocationType()){
             case invokestatic -> code.append(DealWithInvokeStatic(call));
             case invokespecial -> code.append(DealWithInvokeSpecial(call));
+            case invokevirtual -> code.append(DealWithInvokeVirtual(call));
             case NEW -> code.append(DealWithNew(call));
         }
         //code.append(generators.apply(call.getCaller()));
@@ -278,6 +279,22 @@ public class JasminGenerator {
     }
     public static String removeQuotes(String input) {
         return input.replaceAll("^\"|\"$", "");
+    }
+    private String DealWithInvokeVirtual(CallInstruction call){
+        var code = new StringBuilder();
+        //probably wrong
+        code.append(generators.apply(call.getCaller()));
+        for (var arg : call.getArguments()) {
+            code.append(generators.apply(arg));
+        }
+        code.append("invokevirtual ").append(field_to_jasmin(call.getCaller().getType()));
+        code.append(".").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
+        code.append("(");
+        for (var arg : call.getArguments()) {
+            code.append(field_to_jasmin(arg.getType()));
+        }
+        code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
+        return code.toString();
     }
     private String DealWithInvokeStatic(CallInstruction call){
         var code = new StringBuilder();
