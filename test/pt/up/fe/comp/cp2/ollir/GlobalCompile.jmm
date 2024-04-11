@@ -1,22 +1,21 @@
 import io;
-import A;
+import Quicksort;
 
-class CompileMethodInvocation {
+class CompileBasic extends Quicksort {
+
+    int intField;
+    boolean boolField;
+
+    public boolean method2(int intParam1, boolean boolParam1) {
+        boolean boolLocal;
+        int intLocal;
+        boolLocal = true;
+        intLocal = 5;
+
+        return boolParam1;
+    }
+
 
     public static void main(String[] args) {
-
-    }
-
-    public int foo() {
-        int a;
-        boolean bol;
-        A b;
-
-        a = 1;
-        b.some(a);
-        io.println(a);
-        return 0;
     }
 }
-
-
