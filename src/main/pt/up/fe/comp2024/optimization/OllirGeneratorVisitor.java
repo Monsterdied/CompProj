@@ -16,6 +16,9 @@ import static pt.up.fe.comp2024.ast.Kind.*;
 /**
  * Generates OLLIR code from JmmNodes that are not expressions.
  */
+/**
+ * Generates OLLIR code from JmmNodes that are not expressions.
+ */
 public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private static final String SPACE = " ";
@@ -229,7 +232,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-
+        var lhs_node = node.getJmmChild(0);
+        var rhs_node = node.getJmmChild(1);
         var lhs = exprVisitor.visit(node.getJmmChild(0));
         var rhs = exprVisitor.visit(node.getJmmChild(1));
 
@@ -274,7 +278,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             //Variável no return
             if (Objects.equals(exp.getKind(), VAR_REF_EXPR.toString())){
                 //Fazer uma função para ver que tipo de variável é
-                expr = new OllirExprResult(exp.get("name")+"."+"i32","");
+                expr = exprVisitor.visit(exp);
             } else {
                 expr = exprVisitor.visit(exp);
             }
