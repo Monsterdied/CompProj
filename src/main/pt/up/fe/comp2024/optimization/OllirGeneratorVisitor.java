@@ -298,13 +298,25 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitParam(JmmNode node, Void unused) {
-
-        var typeCode = OptUtils.toOllirType(node.getJmmChild(0));
+        StringBuilder code = new StringBuilder();
+        var parent = node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow();
         var id = node.get("name");
+        for(var param: this.table.getParameters(parent)) {
+            if(param.getName().equals(id)){
+                if(param.getType().isArray()){
+                    code.append(String.format("%s.%s%s",id,"array",OptUtils.toOllirType(param.getType().getName())));
+                    break;
+                }
+                else{
+                    code.append(String.format("%s%s",id,OptUtils.toOllirType(param.getType().getName())));
+                    break;
+                }
+            }
+        }
 
-        String code = id + typeCode;
 
-        return code;
+
+        return code.toString();
     }
 
     private String visitMainMethodDecl(JmmNode node, Void unused) {
