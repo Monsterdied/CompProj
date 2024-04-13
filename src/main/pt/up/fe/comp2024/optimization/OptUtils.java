@@ -1,6 +1,7 @@
 package pt.up.fe.comp2024.optimization;
 
 import org.specs.comp.ollir.Instruction;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2024.ast.NodeUtils;
@@ -43,15 +44,18 @@ public class OptUtils {
         return toOllirType(type.getName());
     }
 
-    private static String toOllirType(String typeName) {
+    public static String toOllirType(String typeName) {
 
         String type = "." + switch (typeName) {
             case "int" -> "i32";
-            default -> throw new NotImplementedException(typeName);
+            case "boolean" -> "bool";
+            default -> typeName;
         };
 
         return type;
     }
 
-
+    public static boolean isStatic(String name, List<String> imports) {
+        return imports.contains(name);
+    }
 }

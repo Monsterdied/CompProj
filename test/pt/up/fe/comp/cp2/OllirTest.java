@@ -37,6 +37,11 @@ public class OllirTest {
         testJmmCompilation("pt/up/fe/comp/cp2/ollir/CompileAssignment.jmm", this::compileAssignment);
     }
 
+    @Test
+    public void compileGlobal() {
+        testJmmCompilation("pt/up/fe/comp/cp2/ollir/GlobalCompile.jmm", this::compileGlobal);
+    }
+
     public static void testJmmCompilation(String resource, Consumer<ClassUnit> ollirTester, String executionOutput) {
 
         // If AstToJasmin pipeline, generate Jasmin
@@ -181,5 +186,9 @@ public class OllirTest {
 
         assertEquals("Assignment does not have the expected type", ElementType.INT32,
                 assignInst.get().getTypeOfAssign().getTypeOfElement());
+    }
+
+    public void compileGlobal(ClassUnit classUnit) {
+        return;
     }
 }
