@@ -31,6 +31,7 @@ public class TypeUtils {
         Type type = switch (kind) {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
+            case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
@@ -86,6 +87,10 @@ public class TypeUtils {
             }
         }
         return type;
+    }
+
+    private static Type getArrayAccessExprType(JmmNode arrayAccessExpr, SymbolTable table) {
+        return getVarExprType(arrayAccessExpr.getJmmChild(0), table);
     }
 
 

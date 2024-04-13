@@ -10,6 +10,7 @@ class CompileBasic extends Quicksort {
         int intLocal1;
         boolean boolLocal1;
         int[] list;
+        list[5] = 3;
         intLocal1 = 1 + 2;
         return 0;
     }
