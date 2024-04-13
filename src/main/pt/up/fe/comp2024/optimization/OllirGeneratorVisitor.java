@@ -188,9 +188,13 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var lhs_node = node.getJmmChild(0);
         var rhs_node = node.getJmmChild(1);
         var lhs = exprVisitor.visit(lhs_node);
+
+        if(lhs.getComputation().contains("putfield")){
+            code.append(lhs.getCode());
+            return code.toString();
+        }
+
         var rhs = exprVisitor.visit(rhs_node);
-
-
 
         // code to compute the children
         code.append(lhs.getComputation());
@@ -277,13 +281,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (node.getNumChildren() > 0) {
             var exp = node.getChildren().get(0);
 
-            //Variável no return
-            if (Objects.equals(exp.getKind(), VAR_REF_EXPR.toString())){
-                //Fazer uma função para ver que tipo de variável é
-                expr = exprVisitor.visit(exp);
-            } else {
-                expr = exprVisitor.visit(exp);
-            }
+            expr = exprVisitor.visit(exp);
 
         }
 

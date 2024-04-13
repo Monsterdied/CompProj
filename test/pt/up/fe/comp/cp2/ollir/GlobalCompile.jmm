@@ -3,23 +3,30 @@ import Quicksort;
 
 class CompileBasic extends Quicksort {
 
+    // Test fields
     int intField;
     boolean boolField;
+    io ioField;
 
+    public boolean method2(boolean boolParam1,int intParam1) {
+        intField = 10;
+        return boolField;
+    }
+
+
+    //Test arrays
     public int method1(int[] a) {
         int intLocal1;
         boolean boolLocal1;
         int[] list;
-        list[5] = 3;
+        list[5] = 1;
         intLocal1 = 1 + 2;
         return 0;
     }
 
-    public boolean method2(boolean boolParam1,int intParam1) {
-        return boolField;
-    }
 
 
     public static void main(String[] args) {
     }
 }
+

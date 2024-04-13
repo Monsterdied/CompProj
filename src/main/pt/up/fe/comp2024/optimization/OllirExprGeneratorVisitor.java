@@ -17,6 +17,8 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private static final String ASSIGN = ":=";
     private final String END_STMT = ";\n";
 
+
+
     private final SymbolTable table;
 
     public OllirExprGeneratorVisitor(SymbolTable table) {
@@ -90,6 +92,26 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             return new OllirExprResult(code);
         }
 
+        for (var field : table.getFields()) {
+            if (field.getName().equals(node.get("name"))) {
+                if(node.getParent().getKind().equals("AssignStmt")  ){
+                    String name = node.get("name");
+                    String type = OptUtils.toOllirType(field.getType().getName());
+                    var computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
+                    code = String.format("putfield(this, %s, %s).V;", name + type, computation.getCode());
+                    return new OllirExprResult(computation.getComputation(),code);
+                }
+                else{
+                    Type fieldType = TypeUtils.getExprType(node, table);
+                    String fieldOllirType = OptUtils.toOllirType(fieldType);
+                    String tempVar = OptUtils.getTemp() + fieldOllirType;
+                    String fieldName = node.get("name");
+
+                    code = tempVar + SPACE + ASSIGN + fieldOllirType + SPACE + String.format("getfield(this, %s)", fieldName+fieldOllirType) + fieldOllirType + END_STMT;
+                    return new OllirExprResult(tempVar, code);
+                }
+            }
+        }
         String id = node.get("name");
         Type type = TypeUtils.getExprType(node, table);
         String ollirType = OptUtils.toOllirType(type);
