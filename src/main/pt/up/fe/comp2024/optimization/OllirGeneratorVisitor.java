@@ -182,18 +182,29 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
+        //TODO: FIX Temporary variables increases...
         StringBuilder code = new StringBuilder();
         var lhs_node = node.getJmmChild(0);
         var rhs_node = node.getJmmChild(1);
         var lhs = exprVisitor.visit(lhs_node);
-
+        var rhs = OllirExprResult.EMPTY;
         if(lhs.getComputation().contains("putfield")){
             code.append(lhs.getCode());
             code.append(lhs.getComputation()).append(NL);
             return code.toString();
         }
-
-        var rhs = exprVisitor.visit(rhs_node);
+        /*
+        if(rhs_node.getChildren().size()>0){
+            var rhs_1 = exprVisitor.visit(rhs_node.getChild(0));
+            var rhs_2 = exprVisitor.visit(rhs_node.getChild(1));
+            String op = rhs_node.get("op") + OptUtils.toOllirType(TypeUtils.getExprType(rhs_node,table)) + SPACE;
+            rhs = new OllirExprResult(rhs_1.getCode()+op+rhs_2.getCode(),rhs_1.getComputation()+rhs_2.getComputation());
+        }
+        else {
+            rhs = exprVisitor.visit(rhs_node);
+        }
+        */
+        rhs = exprVisitor.visit(rhs_node);
 
         // code to compute the children
         code.append(lhs.getComputation());

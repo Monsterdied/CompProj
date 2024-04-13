@@ -10,10 +10,11 @@ class CompileBasic extends Quicksort {
 
     public boolean method2(boolean boolParam1,int intParam1) {
         int local;
-        intField = 10 + 1 + 2;
-        local = 50 + 40;
+        local = 1 + 2 + 3 + 4;
+        intField = 5;
         return boolField;
     }
+
 
 
     //Test arrays
@@ -22,7 +23,6 @@ class CompileBasic extends Quicksort {
         boolean boolLocal1;
         int[] list;
         list[5] = 1;
-        intLocal1 = 1 + 2;
         return 0;
     }
 

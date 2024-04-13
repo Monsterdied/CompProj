@@ -97,7 +97,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                     String type = OptUtils.toOllirType(field.getType().getName());
                     var computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
                     code = String.format("putfield(this, %s, %s).V;", name + type, computation.getCode());
-                    OptUtils.decreaseTemp();
                     return new OllirExprResult(computation.getComputation(),code);
                 }
                 else{
@@ -128,10 +127,12 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
      * @return
      */
     private OllirExprResult defaultVisit(JmmNode node, Void unused) {
-
+        /*
         for (var child : node.getChildren()) {
             visit(child);
         }
+        */
+
 
         return OllirExprResult.EMPTY;
     }
