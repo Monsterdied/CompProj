@@ -122,12 +122,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                     //Array
                     if(field.getType().isArray()){
                         code.append(".array");
-                        code.append(OptUtils.toOllirType(field.getType().getName()));
                     }
                     //Other types
-                    else {
-                        code.append(OptUtils.toOllirType(field.getType().getName()));
-                    }
+                    code.append(OptUtils.toOllirType(field.getType().getName()));
+                    break;
                 }
             }
             code.append(";\n");
@@ -191,6 +189,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         if(lhs.getComputation().contains("putfield")){
             code.append(lhs.getCode());
+            code.append(lhs.getComputation()).append(NL);
             return code.toString();
         }
 
