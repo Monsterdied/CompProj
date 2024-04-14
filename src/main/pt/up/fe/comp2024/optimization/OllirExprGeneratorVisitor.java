@@ -63,7 +63,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         }
         if(isStatic){
             code.append(String.format("invokestatic(%s, ", objectName));
-            code.append("\"").append(nodeMethodCall.get("name")).append("\", ");
+            code.append("\"").append(nodeMethodCall.get("name")).append("\"");
         }
         else{
             for(var locals: localVariables){
@@ -73,30 +73,31 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                     break;
                 }
             }
-            code.append(String.format("invokevirtual(%s.%s, %s, ", objectName, type_virtual, "\"" + nodeMethodCall.getChildren().get(0).get("name") + "\""));
+            code.append(String.format("invokevirtual(%s.%s, %s ", objectName, type_virtual, "\"" + nodeMethodCall.get("name") + "\""));
 
         }
 
         String arg_type ="";
-        //TODO: FIX empty args
-        var args_nodes = nodeMethodCall.getChildren("Args").get(0).getChildren();
-
-        for (int i = 0; i < args_nodes.size(); i++) {
-            JmmNode arg = args_nodes.get(i);
-            String name = "";
-            //Variable Case
-            if (arg.hasAttribute("name")) {
-                arg_type = visit(arg).getCode();
-                code.append(arg_type);
-            }
-            //Other case
-            else {
-                var expr = visit(arg);
-                computation.append(expr.getComputation());
-                code.append(String.format("%s", expr.getCode()));
-            }
-            if (i < args_nodes.size() - 1) {
-                code.append(", ");
+        var args_node_list = nodeMethodCall.getChildren("Args");
+        if (!args_node_list.isEmpty()) {
+            var args_nodes = args_node_list.get(0).getChildren();
+            code.append(", ");
+            for (int i = 0; i < args_nodes.size(); i++) {
+                JmmNode arg = args_nodes.get(i);
+                //Variable Case
+                if (arg.hasAttribute("name")) {
+                    arg_type = visit(arg).getCode();
+                    code.append(arg_type);
+                }
+                //Other case
+                else {
+                    var expr = visit(arg);
+                    computation.append(expr.getComputation());
+                    code.append(String.format("%s", expr.getCode()));
+                }
+                if (i < args_nodes.size() - 1) {
+                    code.append(", ");
+                }
             }
         }
         if(isStatic){
@@ -125,11 +126,10 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         return new OllirExprResult(code);
     }
 
-
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
 
         var lhs = visit(node.getJmmChild(0));
-        var rhs = visit(node.getJmmChild(1));
+            var rhs = visit(node.getJmmChild(1));
 
         StringBuilder computation = new StringBuilder();
 
@@ -150,7 +150,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         return new OllirExprResult(code, computation);
     }
-
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
         String code;
@@ -200,11 +199,11 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
      * @return
      */
     private OllirExprResult defaultVisit(JmmNode node, Void unused) {
-        /*
+
         for (var child : node.getChildren()) {
             visit(child);
         }
-        */
+
 
 
         return OllirExprResult.EMPTY;
