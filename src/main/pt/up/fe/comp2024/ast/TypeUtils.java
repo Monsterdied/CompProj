@@ -1,9 +1,13 @@
 package pt.up.fe.comp2024.ast;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.util.List;
+
+import static pt.up.fe.comp2024.ast.Kind.MAIN_METHOD_DECL;
 import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
 
 public class TypeUtils {
@@ -58,7 +62,13 @@ public class TypeUtils {
 
         String id = varRefExpr.get("name");
         var type = new Type("",false);
-        var parent = table.getLocalVariables(varRefExpr.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+        List<Symbol> parent = null;
+        if(varRefExpr.getAncestor(MAIN_METHOD_DECL).isPresent()){
+            parent = table.getLocalVariables("main");
+        }
+        else{
+            parent = table.getLocalVariables(varRefExpr.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+        }
 
         //Variavel Local
         for(var locals: parent){
@@ -69,11 +79,13 @@ public class TypeUtils {
         }
         if(type.getName().isEmpty() && !type.isArray()){
             //Variavel Param
-            var parent_param = table.getParameters(varRefExpr.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
-            for(var param: parent_param) {
-                if(param.getName().equals(id)){
-                    type = param.getType();
-                    break;
+            if(!varRefExpr.getAncestor(MAIN_METHOD_DECL).isPresent()) {
+                var parent_param = table.getParameters(varRefExpr.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+                for (var param : parent_param) {
+                    if (param.getName().equals(id)) {
+                        type = param.getType();
+                        break;
+                    }
                 }
             }
             if(type.getName().isEmpty() && !type.isArray()){

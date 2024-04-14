@@ -10,7 +10,7 @@ class CompileBasic extends Quicksort {
 
     public boolean method2(boolean boolParam1,int intParam1) {
         int local;
-        local = 1 + 2 + 3 + 4;
+        local = 1;
         intField = 5;
         return boolField;
     }
@@ -29,6 +29,8 @@ class CompileBasic extends Quicksort {
 
 
     public static void main(String[] args) {
+        int mainLocal;
+        io.quicksort(true, false, 1);
     }
 }
 

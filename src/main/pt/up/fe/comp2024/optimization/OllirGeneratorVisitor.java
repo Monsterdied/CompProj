@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -193,17 +194,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(lhs.getComputation()).append(NL);
             return code.toString();
         }
-        /*
-        if(rhs_node.getChildren().size()>0){
-            var rhs_1 = exprVisitor.visit(rhs_node.getChild(0));
-            var rhs_2 = exprVisitor.visit(rhs_node.getChild(1));
-            String op = rhs_node.get("op") + OptUtils.toOllirType(TypeUtils.getExprType(rhs_node,table)) + SPACE;
-            rhs = new OllirExprResult(rhs_1.getCode()+op+rhs_2.getCode(),rhs_1.getComputation()+rhs_2.getComputation());
-        }
-        else {
-            rhs = exprVisitor.visit(rhs_node);
-        }
-        */
         rhs = exprVisitor.visit(rhs_node);
 
         // code to compute the children
@@ -235,11 +225,18 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
-        String methodNodeName = node.getChildren().get(0).getChildren().get(0).get("name");
+        String methodNodeName = node.getDescendants(VAR_REF_EXPR).get(0).get("name");
         List<String> imports = table.getImports();
         boolean isStatic = OptUtils.isStatic(methodNodeName, imports);
         String type_virtual = "";
-        for(var locals: this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow())){
+        List<Symbol> localVariables = null;
+        if(node.getAncestor(MAIN_METHOD_DECL).isPresent()){
+            localVariables = this.table.getLocalVariables("main");
+        }
+        else{
+            localVariables = this.table.getLocalVariables(node.getParent().get("name"));
+        }
+        for(var locals: localVariables){
             var a  = locals.getName();
             if(Objects.equals(methodNodeName, locals.getName()))
                 type_virtual= locals.getType().getName();
@@ -249,7 +246,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append("\"").append(node.getChildren().get(0).get("name")).append("\", ");
         }
         else {
-            //var a = this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
 
             code.append(String.format("invokevirtual(%s.%s, %s, ", methodNodeName, type_virtual, "\"" + node.getChildren().get(0).get("name") + "\""));
         }
@@ -257,12 +253,27 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var children = node.getChildren().get(0).getChildren().get(1).getChildren();
         for (int i = 0; i < children.size(); i++) {
             var child = children.get(i);
-
-            for(var locals : this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow())) {
-                if (Objects.equals(locals.getName(), child.get("name")))
-                    type = locals.getType().getName();
+            String name = "";
+            if (child.hasAttribute("name")) {
+                name = child.get("name");
+            } else {
+                // Handle constant nodes
+                if (child.getKind().equals("IntegerLiteral")) {
+                    name = child.get("value");
+                    type = "int";
+                } else if (child.getKind().equals("BooleanLiteral")) {
+                    name = child.get("value").equals("true") ? "1" : "0";
+                    type ="boolean";
+                }
             }
-            code.append(String.format("%s%s", child.get("name"), OptUtils.toOllirType(type)));
+
+            for (var locals : localVariables) {
+                if (Objects.equals(locals.getName(), name)) {
+                    type = locals.getType().getName();
+                    break;
+                }
+            }
+            code.append(String.format("%s%s", name, OptUtils.toOllirType(type)));
             if (i < children.size() - 1) {
                 code.append(", ");
             }
@@ -332,6 +343,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitMainMethodDecl(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         code.append(".method public static main(args.array.String).V {").append(NL);
+        for(var child: node.getChildren()){
+            code.append(visit(child));
+        }
         code.append("ret.V ;").append(NL);
         code.append(R_BRACKET).append(NL);
         return code.toString();
