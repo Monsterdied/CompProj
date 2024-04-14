@@ -225,69 +225,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder();
 
-        String methodNodeName = node.getDescendants(VAR_REF_EXPR).get(0).get("name");
-        List<String> imports = table.getImports();
-        boolean isStatic = OptUtils.isStatic(methodNodeName, imports);
-        String type_virtual = "";
-        List<Symbol> localVariables = null;
-        if(node.getAncestor(MAIN_METHOD_DECL).isPresent()){
-            localVariables = this.table.getLocalVariables("main");
-        }
-        else{
-            localVariables = this.table.getLocalVariables(node.getParent().get("name"));
-        }
-        for(var locals: localVariables){
-            var a  = locals.getName();
-            if(Objects.equals(methodNodeName, locals.getName()))
-                type_virtual= locals.getType().getName();
-        }
-        if(isStatic){
-            code.append(String.format("invokestatic(%s, ", methodNodeName));
-            code.append("\"").append(node.getChildren().get(0).get("name")).append("\", ");
-        }
-        else {
-
-            code.append(String.format("invokevirtual(%s.%s, %s, ", methodNodeName, type_virtual, "\"" + node.getChildren().get(0).get("name") + "\""));
-        }
-        String type = "";
-        var children = node.getChildren().get(0).getChildren().get(1).getChildren();
-        for (int i = 0; i < children.size(); i++) {
-            var child = children.get(i);
-            String name = "";
-            if (child.hasAttribute("name")) {
-                name = child.get("name");
-            } else {
-                // Handle constant nodes
-                if (child.getKind().equals("IntegerLiteral")) {
-                    name = child.get("value");
-                    type = "int";
-                } else if (child.getKind().equals("BooleanLiteral")) {
-                    name = child.get("value").equals("true") ? "1" : "0";
-                    type ="boolean";
-                }
-            }
-
-            for (var locals : localVariables) {
-                if (Objects.equals(locals.getName(), name)) {
-                    type = locals.getType().getName();
-                    break;
-                }
-            }
-            code.append(String.format("%s%s", name, OptUtils.toOllirType(type)));
-            if (i < children.size() - 1) {
-                code.append(", ");
-            }
-        }
-
-        if(isStatic){
-            code.append(").V;").append(NL);
-        }
-        else{
-            code.append(")."+type_virtual+";").append(NL);
-        }
-
-
+        var expr = node.getJmmChild(0);
+        var exprResult = exprVisitor.visit(expr);
+        code.append(exprResult.getComputation());
+        code.append(exprResult.getCode());
         return code.toString();
+
     }
 
     private String visitReturn(JmmNode node, Void unused) {

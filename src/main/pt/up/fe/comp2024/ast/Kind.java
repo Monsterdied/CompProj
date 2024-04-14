@@ -19,6 +19,8 @@ public enum Kind {
     ARRAY_ACCESS,
     RETURN_STMT,
     EXPR_STMT,
+
+    METHOD_CALL_EXPR,
     BINARY_EXPR,
     INTEGER_LITERAL,
 

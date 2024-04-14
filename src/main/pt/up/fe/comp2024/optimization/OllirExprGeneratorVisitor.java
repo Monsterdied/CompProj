@@ -1,10 +1,14 @@
 package pt.up.fe.comp2024.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2024.ast.TypeUtils;
+
+import java.util.List;
+import java.util.Objects;
 
 import static pt.up.fe.comp2024.ast.Kind.*;
 
@@ -27,6 +31,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
     @Override
     protected void buildVisitor() {
+        addVisit(METHOD_CALL_EXPR, this::visitMethodCall);
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(ARRAY_ACCESS_EXPR, this::visitVarRef); // ArrayAccessExpr is a VarRefExpr
@@ -36,6 +41,79 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         setDefaultVisit(this::defaultVisit);
     }
 
+    private OllirExprResult visitMethodCall(JmmNode nodeMethodCall, Void unused){
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+
+        String objectName = nodeMethodCall.getDescendants(VAR_REF_EXPR).get(0).get("name");
+
+        List<String> imports = table.getImports();
+
+        boolean isStatic = OptUtils.isStatic(objectName, imports);
+
+        String type_virtual = "";
+
+        //Main decl doesn't have a name, so we need to check if the parent is a main method decl
+        List<Symbol> localVariables = null;
+        if(nodeMethodCall.getAncestor(MAIN_METHOD_DECL).isPresent()){
+            localVariables = this.table.getLocalVariables("main");
+        }
+        else{
+            localVariables = this.table.getLocalVariables(nodeMethodCall.getParent().get("name"));
+        }
+        if(isStatic){
+            code.append(String.format("invokestatic(%s, ", objectName));
+            code.append("\"").append(nodeMethodCall.get("name")).append("\", ");
+        }
+        else{
+            for(var locals: localVariables){
+                var a  = locals.getName();
+                if(Objects.equals(objectName, a)){
+                    type_virtual= locals.getType().getName();
+                    break;
+                }
+            }
+            code.append(String.format("invokevirtual(%s.%s, %s, ", objectName, type_virtual, "\"" + nodeMethodCall.getChildren().get(0).get("name") + "\""));
+
+        }
+
+        String arg_type ="";
+        var args_nodes = nodeMethodCall.getChildren("Args").get(0).getChildren();
+
+        for (int i = 0; i < args_nodes.size(); i++) {
+            JmmNode arg = args_nodes.get(i);
+            String name = "";
+            //Variable Case
+            if (arg.hasAttribute("name")) {
+                name = arg.get("name");
+                for (var locals : localVariables) {
+                    var a = locals.getName();
+                    if (Objects.equals(name, a)) {
+                        arg_type = locals.getType().getName();
+                        break;
+                    }
+                }
+            }
+            //Other case
+            else {
+                var expr = visit(arg);
+                computation.append(expr.getComputation());
+                code.append(String.format("%s", expr.getCode()));
+            }
+            if (i < args_nodes.size() - 1) {
+                code.append(", ");
+            }
+        }
+        if(isStatic){
+            code.append(").V;").append("\n");
+        }
+        else{
+            code.append(").").append(type_virtual).append(";").append("\n");
+        }
+
+
+        return new OllirExprResult(code.toString(), computation);
+    }
 
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
         var intType = new Type(TypeUtils.getIntTypeName(), false);
@@ -47,7 +125,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private OllirExprResult visitBoolean(JmmNode node, Void unused) {
         var boolType = new Type(TypeUtils.getBooleanTypeName(), false);
         String ollirBoolType = OptUtils.toOllirType(boolType);
-        String value = node.get("value").equals("true") ? "1" : "0";
+            String value = node.get("value").equals("true") ? "1" : "0";
         String code = value + ollirBoolType;
         return new OllirExprResult(code);
     }
