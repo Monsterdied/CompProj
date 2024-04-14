@@ -124,7 +124,8 @@ whileStmt
 
 expr
     : LPAREN expr RPAREN #ParenExpr
-    | THIS #ThisExpr
+    | THIS DOT expr #ThisExpr1
+    | THIS expr  #ThisExpr2
     | name=ID LPAREN args? RPAREN #MethodCallExpr
     | NEW type LBRACK expr RBRACK #NewArrayExpression
     | NEW name=ID LPAREN RPAREN #NewClassExpression

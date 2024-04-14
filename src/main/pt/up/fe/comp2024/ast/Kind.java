@@ -18,15 +18,16 @@ public enum Kind {
     ASSIGN_STMT,
     RETURN_STMT,
     EXPR_STMT,
+    METHOD_CALL_EXPR,
     BINARY_EXPR,
     INTEGER_LITERAL,
-
     BOOLEAN_LITERAL,
+    ARRAY_ACCESS_EXPR,
     VAR_REF_EXPR;
 
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
-    private static final Set<Kind> EXPRESSIONS = Set.of(BINARY_EXPR, INTEGER_LITERAL, BOOLEAN_LITERAL,  VAR_REF_EXPR);
+    private static final Set<Kind> EXPRESSIONS = Set.of(BINARY_EXPR, INTEGER_LITERAL, BOOLEAN_LITERAL,  VAR_REF_EXPR, ARRAY_ACCESS_EXPR);
 
     private final String name;
 
