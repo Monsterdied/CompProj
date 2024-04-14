@@ -34,7 +34,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(METHOD_CALL_EXPR, this::visitMethodCall);
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(BINARY_EXPR, this::visitBinExpr);
-        addVisit(ARRAY_ACCESS_EXPR, this::visitVarRef); // ArrayAccessExpr is a VarRefExpr
+        addVisit(ARRAY_ACCESS_EXPR, this::visitVarRef);
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOLEAN_LITERAL, this::visitBoolean);
 
@@ -85,13 +85,14 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             for (int i = 0; i < args_nodes.size(); i++) {
                 JmmNode arg = args_nodes.get(i);
                 //Variable Case
-                if (arg.hasAttribute("name")) {
+                if (arg.isInstance(VAR_REF_EXPR)) {
                     arg_type = visit(arg).getCode();
                     code.append(arg_type);
                 }
                 //Other case
                 else {
                     var expr = visit(arg);
+
                     computation.append(expr.getComputation());
                     code.append(String.format("%s", expr.getCode()));
                 }
@@ -106,8 +107,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         else{
             code.append(").").append(type_virtual).append(";").append("\n");
         }
-
-
         return new OllirExprResult(code.toString(), computation);
     }
 
@@ -129,7 +128,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
 
         var lhs = visit(node.getJmmChild(0));
-            var rhs = visit(node.getJmmChild(1));
+        var rhs = visit(node.getJmmChild(1));
 
         StringBuilder computation = new StringBuilder();
 
