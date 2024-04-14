@@ -78,6 +78,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         }
 
         String arg_type ="";
+        //TODO: FIX empty args
         var args_nodes = nodeMethodCall.getChildren("Args").get(0).getChildren();
 
         for (int i = 0; i < args_nodes.size(); i++) {
