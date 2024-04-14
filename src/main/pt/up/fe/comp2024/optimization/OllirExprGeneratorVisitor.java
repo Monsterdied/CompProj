@@ -59,7 +59,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             localVariables = this.table.getLocalVariables("main");
         }
         else{
-            localVariables = this.table.getLocalVariables(nodeMethodCall.getParent().get("name"));
+            localVariables = this.table.getLocalVariables(nodeMethodCall.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
         }
         if(isStatic){
             code.append(String.format("invokestatic(%s, ", objectName));
@@ -85,14 +85,8 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             String name = "";
             //Variable Case
             if (arg.hasAttribute("name")) {
-                name = arg.get("name");
-                for (var locals : localVariables) {
-                    var a = locals.getName();
-                    if (Objects.equals(name, a)) {
-                        arg_type = locals.getType().getName();
-                        break;
-                    }
-                }
+                arg_type = visit(arg).getCode();
+                code.append(arg_type);
             }
             //Other case
             else {
