@@ -95,16 +95,15 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
                     computation.append(expr.getComputation());
 
-                    if(arg.isInstance(BOOLEAN_LITERAL) || arg.isInstance(INTEGER_LITERAL)){
-                        code.append(expr.getCode());
-                    }
-                    else {
+                    if(arg.isInstance(METHOD_CALL_EXPR)){
                         Type resType = TypeUtils.getExprType(arg, table);
                         String resOllirType = OptUtils.toOllirType(resType);
                         String tempVar = OptUtils.getTemp() + resOllirType;
-
                         computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
                         code.append(tempVar);
+                    }
+                    else {
+                        code.append(expr.getCode());
                     }
                 }
                 if (i < args_nodes.size() - 1) {
@@ -112,11 +111,17 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 }
             }
         }
+        if(nodeMethodCall.getParent().isInstance(ASSIGN_STMT)){
+            var type = TypeUtils.getExprType(nodeMethodCall.getParent().getChildren(VAR_REF_EXPR).get(0),table);
+            String resOllirType = OptUtils.toOllirType(type);
+            code.append(String.format(")%s",resOllirType)).append(END_STMT);
+            return new OllirExprResult(code.toString(), computation);
+        }
         if(isStatic){
-            code.append(").V;").append("\n");
+            code.append(").V").append(END_STMT);
         }
         else{
-            code.append(").").append(type_virtual).append(";").append("\n");
+            code.append(").").append(type_virtual).append(END_STMT);
         }
         return new OllirExprResult(code.toString(), computation);
     }
