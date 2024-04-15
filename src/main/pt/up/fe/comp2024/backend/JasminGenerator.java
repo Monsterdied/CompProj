@@ -133,6 +133,8 @@ public class JasminGenerator {
                 return "Ljava/lang/String;";
             case OBJECTREF:
                 return getClass(((ClassType) type).getName());
+            case THIS:
+                return getClass(((ClassType) type).getName());
             default:
                 return null;
         }
@@ -290,7 +292,7 @@ public class JasminGenerator {
             code.append(generators.apply(arg));
         }
         code.append("invokevirtual ").append(field_to_jasmin(call.getCaller().getType()));
-        code.append(".").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
+        code.append("/").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
         code.append("(");
         for (var arg : call.getArguments()) {
             code.append(field_to_jasmin(arg.getType()));
@@ -349,7 +351,7 @@ public class JasminGenerator {
     private String generateOperand(Operand operand) {
         // get register
         return switch (operand.getType().getTypeOfElement()){
-            case THIS -> "aload_0";
+            case THIS -> "aload_0\n";
             case STRING ,ARRAYREF , OBJECTREF -> "aload" + getIndexOfTheReg(operand.getName());
             case INT32,BOOLEAN -> "iload" +  getIndexOfTheReg(operand.getName());
             default -> null;
