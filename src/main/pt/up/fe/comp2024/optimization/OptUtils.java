@@ -46,10 +46,12 @@ public class OptUtils {
 
     public static String toOllirType(String typeName) {
 
-        String type = "." + switch (typeName) {
-            case "int" -> "i32";
-            case "boolean" -> "bool";
-            default -> typeName;
+        String type = switch (typeName) {
+            case "int" -> ".i32";
+            case "boolean" -> ".bool";
+            case "void" -> ".V";
+            case "import" -> "";
+            default -> "." + typeName;
         };
 
         return type;

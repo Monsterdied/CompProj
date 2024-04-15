@@ -174,6 +174,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             var child = node.getJmmChild(i);
             var childCode = visit(child);
             code.append(childCode);
+
         }
 
         code.append(R_BRACKET);
@@ -216,7 +217,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-        //TODO: FIX Temporary variables increases...
+        //TODO: ASK ABOUT METHOD CALL TYPES IN OPERATIONS AND TMPS
         StringBuilder code = new StringBuilder();
         var lhs_node = node.getJmmChild(0);
         var rhs_node = node.getJmmChild(1);
@@ -233,7 +234,17 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(lhs.getComputation());
         code.append(rhs.getComputation());
 
+
         // code to compute self
+        String tempVar = "";
+        if(rhs_node.isInstance(METHOD_CALL_EXPR)){
+            Type resType = TypeUtils.getExprType(node.getChildren(VAR_REF_EXPR).get(0), table);
+            String resOllirType = OptUtils.toOllirType(resType);
+            tempVar = OptUtils.getTemp() + resOllirType;
+            code.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(rhs.getCode());
+
+        }
+
         // statement has type of lhs
         Type thisType = TypeUtils.getExprType(node.getJmmChild(0), table);
         String typeString = OptUtils.toOllirType(thisType);
@@ -246,9 +257,18 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(typeString);
         code.append(SPACE);
 
-        code.append(rhs.getCode());
+        if(rhs_node.isInstance(METHOD_CALL_EXPR)){
+            code.append(tempVar).append(END_STMT);
+        }
+        else{
+            code.append(rhs.getCode());
+        }
 
-        code.append(END_STMT);
+
+        if(!rhs.getCode().contains(";")){
+            code.append(END_STMT);
+        }
+
 
         return code.toString();
     }

@@ -125,9 +125,10 @@ whileStmt
 expr
     : LPAREN expr RPAREN #ParenExpr
     | THIS  #ThisExpr
+    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
     | name=ID LPAREN args? RPAREN #MethodCallExpr
-    | NEW type LBRACK expr RBRACK #NewArrayExpression
-    | NEW name=ID LPAREN RPAREN #NewClassExpression
+    | NEW type LBRACK expr RBRACK #NewArrayExpr
+    | NEW name=ID LPAREN RPAREN #NewClassExpr
     | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
     | expr op=(AND | OR) expr #BinaryExpr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
@@ -139,7 +140,6 @@ expr
     | name=ID #VarRefExpr
     | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
     | expr DOT LENGTH #ArrayLengthExpr
-    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     ;
 

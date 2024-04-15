@@ -15,6 +15,8 @@ public class TypeUtils {
     private static final String INT_TYPE_NAME = "int";
     private static final String BOOLEAN_TYPE_NAME = "boolean";
 
+    private static final String VOID = "void";
+
     public static String getIntTypeName() {
         return INT_TYPE_NAME;
     }
@@ -36,8 +38,10 @@ public class TypeUtils {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
             case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table);
+            case METHOD_CALL_EXPR -> new Type(VOID, false);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
+            case THIS_EXPR -> getThisType(expr,table);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
         };
 
@@ -56,7 +60,6 @@ public class TypeUtils {
                     throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
         };
     }
-
 
     private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
 
@@ -96,6 +99,14 @@ public class TypeUtils {
                         break;
                     }
                 }
+                if(type.getName().isEmpty() && !type.isArray()){
+                    for(var imports: table.getImports()){
+                        if (imports.contains(id)) {
+                            type = new Type("import", false);
+                            break;
+                        }
+                    }
+                }
             }
         }
         return type;
@@ -105,6 +116,9 @@ public class TypeUtils {
         return getVarExprType(arrayAccessExpr.getJmmChild(0), table);
     }
 
+    private static Type getThisType(JmmNode binaryExpr,SymbolTable table) {
+        return new Type(table.getClassName(),false);
+    }
 
     /**
      * @param sourceType
