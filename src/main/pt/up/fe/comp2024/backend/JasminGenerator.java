@@ -58,6 +58,7 @@ public class JasminGenerator {
         generators.put(CallInstruction.class, this::generateCallInstruction);
         generators.put(PutFieldInstruction.class,this::PutFieldInstruction );
         generators.put(GetFieldInstruction.class,this::GetFieldInstruction );
+        generators.put(UnaryOpInstruction.class,this::generateUnaryOpInstruction);
     }
 
     public List<Report> getReports() {
@@ -256,6 +257,7 @@ public class JasminGenerator {
         switch (type) {
             case INT32 -> code.append("istore");
             case BOOLEAN -> code.append("istore");
+            case STRING -> code.append("astore");
             case ARRAYREF -> code.append("astore");
             case OBJECTREF -> code.append("astore");
             default -> throw new NotImplementedException(type);
@@ -352,6 +354,10 @@ public class JasminGenerator {
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "iadd";
             case MUL -> "imul";
+            case SUB -> "isub";
+            case DIV -> "idiv";
+            case ANDB -> "iand";
+            case NEQ -> "ineg";
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
 
@@ -359,7 +365,16 @@ public class JasminGenerator {
 
         return code.toString();
     }
-
+    private String generateUnaryOpInstruction(UnaryOpInstruction Op){
+        var code = new StringBuilder();
+        code.append(generators.apply(Op.getOperand()));
+        var op = switch (Op.getOperation().getOpType()) {
+            case NOTB -> "ineg";
+            default -> throw new NotImplementedException(Op.getOperation().getOpType());
+        };
+        code.append(op).append(NL);
+        return code.toString();
+    }
     private String generateReturn(ReturnInstruction returnInst) {
         var code = new StringBuilder();
 
