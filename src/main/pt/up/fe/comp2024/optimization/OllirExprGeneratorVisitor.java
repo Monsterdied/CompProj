@@ -94,7 +94,18 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                     var expr = visit(arg);
 
                     computation.append(expr.getComputation());
-                    code.append(String.format("%s", expr.getCode()));
+
+                    if(arg.isInstance(BOOLEAN_LITERAL) || arg.isInstance(INTEGER_LITERAL)){
+                        code.append(expr.getCode());
+                    }
+                    else {
+                        Type resType = TypeUtils.getExprType(arg, table);
+                        String resOllirType = OptUtils.toOllirType(resType);
+                        String tempVar = OptUtils.getTemp() + resOllirType;
+
+                        computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
+                        code.append(tempVar);
+                    }
                 }
                 if (i < args_nodes.size() - 1) {
                     code.append(", ");

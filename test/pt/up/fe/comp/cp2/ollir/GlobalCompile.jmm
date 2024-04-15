@@ -32,8 +32,9 @@ class CompileBasic extends Quicksort {
     public static void main(String[] args) {
         int mainLocal;
         A b;
+        A a;
         //b.some(mainLocal);
-        io.quicksort(2+3);
+        io.quicksort(io.quick(1,2),3);
         //mainLocal = io.quick(1,2);
     }
 }

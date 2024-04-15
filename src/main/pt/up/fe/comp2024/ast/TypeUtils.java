@@ -15,6 +15,8 @@ public class TypeUtils {
     private static final String INT_TYPE_NAME = "int";
     private static final String BOOLEAN_TYPE_NAME = "boolean";
 
+    private static final String VOID = "void";
+
     public static String getIntTypeName() {
         return INT_TYPE_NAME;
     }
@@ -36,6 +38,7 @@ public class TypeUtils {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
             case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table);
+            case METHOD_CALL_EXPR -> new Type(VOID, false);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
