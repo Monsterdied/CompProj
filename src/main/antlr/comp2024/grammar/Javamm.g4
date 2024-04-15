@@ -123,24 +123,24 @@ whileStmt
     ;
 
 expr
-    : LPAREN expr RPAREN #ParenExpr
-    | THIS  #ThisExpr
-    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
-    | name=ID LPAREN args? RPAREN #MethodCallExpr
-    | NEW type LBRACK expr RBRACK #NewArrayExpr
-    | NEW name=ID LPAREN RPAREN #NewClassExpr
-    | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
-    | expr op=(AND | OR) expr #BinaryExpr
+    : expr op=(AND | OR) expr #BinaryExpr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
+    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
+    | expr DOT LENGTH #ArrayLengthExpr
+    | name=ID LPAREN args? RPAREN #MethodCallExpr
+    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
+    | NEW type LBRACK expr RBRACK #NewArrayExpr
+    | NEW name=ID LPAREN RPAREN #NewClassExpr
     | op=NOT expr #NotExpr
+    | LPAREN expr RPAREN #ParenExpr
+    | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
     | value=INTEGER #IntegerLiteral
     | value=BOOLEAN_VALUE #BooleanLiteral
     | name=ID #VarRefExpr
-    | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
-    | expr DOT LENGTH #ArrayLengthExpr
-    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
+    | THIS  #ThisExpr
+    //| LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
     ;
 
 args

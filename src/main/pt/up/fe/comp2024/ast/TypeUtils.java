@@ -30,7 +30,7 @@ public class TypeUtils {
      * @return
      */
     public static Type getExprType(JmmNode expr, SymbolTable table) {
-        // TODO: Simple implementation that needs to be expanded ( already expanded x1)
+
 
         var kind = Kind.fromString(expr.getKind());
 
@@ -42,6 +42,7 @@ public class TypeUtils {
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
+            case NEW_CLASS_EXPR -> getNewType(expr,table);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
         };
 
@@ -117,6 +118,10 @@ public class TypeUtils {
     }
 
     private static Type getThisType(JmmNode binaryExpr,SymbolTable table) {
+        return new Type(table.getClassName(),false);
+    }
+
+    private static Type getNewType(JmmNode newExpr,SymbolTable table){
         return new Type(table.getClassName(),false);
     }
 
