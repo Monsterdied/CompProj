@@ -217,7 +217,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-        //TODO: FIX Temporary variables increases...
         //TODO: ASK ABOUT METHOD CALL TYPES IN OPERATIONS AND TMPS
         StringBuilder code = new StringBuilder();
         var lhs_node = node.getJmmChild(0);
