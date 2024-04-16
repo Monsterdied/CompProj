@@ -11,6 +11,8 @@ import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.util.Objects;
+
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
 public class SemanticAnalyzer extends AnalysisVisitor  {
@@ -168,11 +170,21 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
         // Get the left operand (the variable being assigned to)
         JmmNode assignee = assignStmt.getChildren().get(0);
-        Type assigneeType = TypeUtils.getVarExprType(assignee, table);
+        Type assigneeType = TypeUtils.getExprType(assignee, table);
 
         // Get the right operand (the value being assigned)
         JmmNode valueExpr = assignStmt.getChildren().get(1);
         Type valueType = TypeUtils.getExprType(valueExpr, table);
+
+        // Pass if both variables are imports
+        if (table.getImports().contains(assigneeType.getName()) && table.getImports().contains(valueType.getName())) {
+            return null;
+        }
+
+        // Pass if assignee extends value
+        if (Objects.equals(table.getSuper(), assigneeType.getName()) && Objects.equals(table.getClassName(), valueType.getName())) {
+            return null;
+        }
 
         // Check if the types are compatible
         if (!assigneeType.equals(valueType)) {

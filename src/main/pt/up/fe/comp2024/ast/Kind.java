@@ -25,7 +25,8 @@ public enum Kind {
     INTEGER_LITERAL,
     BOOLEAN_LITERAL,
     ARRAY_ACCESS_EXPR,
-    VAR_REF_EXPR;
+    VAR_REF_EXPR,
+    NEW_ARRAY_EXPR;
 
 
 
