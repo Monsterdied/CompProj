@@ -168,7 +168,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
         // Get the left operand (the variable being assigned to)
         JmmNode assignee = assignStmt.getChildren().get(0);
-        Type assigneeType = TypeUtils.getExprType(assignee, table);
+        Type assigneeType = TypeUtils.getVarExprType(assignee, table);
 
         // Get the right operand (the value being assigned)
         JmmNode valueExpr = assignStmt.getChildren().get(1);

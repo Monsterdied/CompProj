@@ -53,7 +53,7 @@ public class TypeUtils {
     }
 
 
-    private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
+    public static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
 
         String id = varRefExpr.get("name");
         var type = new Type("",false);
