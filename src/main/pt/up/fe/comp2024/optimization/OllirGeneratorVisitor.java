@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -47,11 +48,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(CLASS_DECL, this::visitClass);
         addVisit(VAR_DECL, this::visitVarDecl);
         addVisit(METHOD_DECL, this::visitMethodDecl);
-        addVisit(ASSIGN_STMT, this::visitAssignStmt);
+        addVisit(MAIN_METHOD_DECL, this::visitMainMethodDecl);
         addVisit(PARAM, this::visitParam);
+        addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(EXPR_STMT, this::visitExprStmt);
-        addVisit(MAIN_METHOD_DECL, this::visitMainMethodDecl);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -122,12 +123,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                     //Array
                     if(field.getType().isArray()){
                         code.append(".array");
-                        code.append(OptUtils.toOllirType(field.getType().getName()));
                     }
                     //Other types
-                    else {
-                        code.append(OptUtils.toOllirType(field.getType().getName()));
-                    }
+                    code.append(OptUtils.toOllirType(field.getType().getName()));
+                    break;
                 }
             }
             code.append(";\n");
@@ -175,6 +174,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             var child = node.getJmmChild(i);
             var childCode = visit(child);
             code.append(childCode);
+
         }
 
         code.append(R_BRACKET);
@@ -183,19 +183,68 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    private String visitMainMethodDecl(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        code.append(".method public static main(args.array.String).V {").append(NL);
+        for(var child: node.getChildren()){
+            code.append(visit(child));
+        }
+        code.append("ret.V ;").append(NL);
+        code.append(R_BRACKET).append(NL);
+        return code.toString();
+    }
+
+    private String visitParam(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        var parent = node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow();
+        var id = node.get("name");
+        for(var param: this.table.getParameters(parent)) {
+            if(param.getName().equals(id)){
+                if(param.getType().isArray()){
+                    code.append(String.format("%s.%s%s",id,"array",OptUtils.toOllirType(param.getType().getName())));
+                    break;
+                }
+                else{
+                    code.append(String.format("%s%s",id,OptUtils.toOllirType(param.getType().getName())));
+                    break;
+                }
+            }
+        }
+
+
+
+        return code.toString();
+    }
+
     private String visitAssignStmt(JmmNode node, Void unused) {
+        //TODO: ASK ABOUT METHOD CALL TYPES IN OPERATIONS AND TMPS
+        StringBuilder code = new StringBuilder();
         var lhs_node = node.getJmmChild(0);
         var rhs_node = node.getJmmChild(1);
         var lhs = exprVisitor.visit(lhs_node);
-        var rhs = exprVisitor.visit(rhs_node);
-
-        StringBuilder code = new StringBuilder();
+        var rhs = OllirExprResult.EMPTY;
+        if(lhs.getComputation().contains("putfield")){
+            code.append(lhs.getCode());
+            code.append(lhs.getComputation()).append(NL);
+            return code.toString();
+        }
+        rhs = exprVisitor.visit(rhs_node);
 
         // code to compute the children
         code.append(lhs.getComputation());
         code.append(rhs.getComputation());
 
+
         // code to compute self
+        String tempVar = "";
+        if(rhs_node.isInstance(METHOD_CALL_EXPR)){
+            Type resType = TypeUtils.getExprType(node.getChildren(VAR_REF_EXPR).get(0), table);
+            String resOllirType = OptUtils.toOllirType(resType);
+            tempVar = OptUtils.getTemp() + resOllirType;
+            code.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(rhs.getCode());
+
+        }
+
         // statement has type of lhs
         Type thisType = TypeUtils.getExprType(node.getJmmChild(0), table);
         String typeString = OptUtils.toOllirType(thisType);
@@ -208,55 +257,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(typeString);
         code.append(SPACE);
 
-        code.append(rhs.getCode());
-
-        code.append(END_STMT);
-
-        return code.toString();
-    }
-
-    private String visitExprStmt(JmmNode node, Void unused) {
-
-        StringBuilder code = new StringBuilder();
-
-        String methodNodeName = node.getChildren().get(0).getChildren().get(0).get("name");
-        List<String> imports = table.getImports();
-        boolean isStatic = OptUtils.isStatic(methodNodeName, imports);
-        String type_virtual = "";
-        for(var locals: this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow())){
-            var a  = locals.getName();
-            if(Objects.equals(methodNodeName, locals.getName()))
-                type_virtual= locals.getType().getName();
-        }
-        if(isStatic){
-            code.append(String.format("invokestatic(%s, ", methodNodeName));
-            code.append("\"").append(node.getChildren().get(0).get("name")).append("\", ");
-        }
-        else {
-            //var a = this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
-
-            code.append(String.format("invokevirtual(%s.%s, %s, ", methodNodeName, type_virtual, "\"" + node.getChildren().get(0).get("name") + "\""));
-        }
-        String type = "";
-        var children = node.getChildren().get(0).getChildren().get(1).getChildren();
-        for (int i = 0; i < children.size(); i++) {
-            var child = children.get(i);
-
-            for(var locals : this.table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow())) {
-                if (Objects.equals(locals.getName(), child.get("name")))
-                    type = locals.getType().getName();
-            }
-            code.append(String.format("%s%s", child.get("name"), OptUtils.toOllirType(type)));
-            if (i < children.size() - 1) {
-                code.append(", ");
-            }
-        }
-
-        if(isStatic){
-            code.append(").V;").append(NL);
+        if(rhs_node.isInstance(METHOD_CALL_EXPR)){
+            code.append(tempVar).append(END_STMT);
         }
         else{
-            code.append(")."+type_virtual+";").append(NL);
+            code.append(rhs.getCode());
+        }
+
+
+        if(!rhs.getCode().contains(";")){
+            code.append(END_STMT);
         }
 
 
@@ -275,13 +285,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (node.getNumChildren() > 0) {
             var exp = node.getChildren().get(0);
 
-            //Variável no return
-            if (Objects.equals(exp.getKind(), VAR_REF_EXPR.toString())){
-                //Fazer uma função para ver que tipo de variável é
-                expr = exprVisitor.visit(exp);
-            } else {
-                expr = exprVisitor.visit(exp);
-            }
+            expr = exprVisitor.visit(exp);
 
         }
 
@@ -297,22 +301,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-    private String visitParam(JmmNode node, Void unused) {
+    private String visitExprStmt(JmmNode node, Void unused) {
 
-        var typeCode = OptUtils.toOllirType(node.getJmmChild(0));
-        var id = node.get("name");
-
-        String code = id + typeCode;
-
-        return code;
-    }
-
-    private String visitMainMethodDecl(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-        code.append(".method public static main(args.array.String).V {").append(NL);
-        code.append("ret.V ;").append(NL);
-        code.append(R_BRACKET).append(NL);
+
+        var expr = node.getJmmChild(0);
+        var exprResult = exprVisitor.visit(expr);
+        code.append(exprResult.getComputation());
+        code.append(exprResult.getCode());
         return code.toString();
+
     }
 
     private String buildConstructor() {
