@@ -70,7 +70,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitImport(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-        code.append(String.format("import %s;",node.get("ID"))).append(NL);
+        var importStmt = node.get("value");
+        StringBuilder result = new StringBuilder();
+        String[] importParts = importStmt.substring(1, importStmt.length() - 1).split(", ");
+        for (String part : importParts) {
+            result.append(part).append(".");
+        }
+        result.deleteCharAt(result.length() - 1);
+        code.append(String.format("import %s;", result)).append(NL);
         return code.toString();
     }
 
