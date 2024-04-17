@@ -31,6 +31,8 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         addVisit("IfStmt", this::visitIfStmt);
         addVisit("WhileStmt", this::visitWhileStmt);
         addVisit("MethodCallExpr", this::visitMethodCallExpr);
+        addVisit(Kind.ARRAY_INIT_EXPRESSION, this::visitArrayInitExpr);
+        addVisit(Kind.VAR_ARG_ARRAY ,this::visitVarArgArray);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -272,6 +274,56 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
                     NodeUtils.getLine(expr),
                     NodeUtils.getColumn(expr),
                     "Invalid method call.",
+                    null)
+            );
+        }
+
+        return null;
+    }
+
+    private Void visitArrayInitExpr(JmmNode expr, SymbolTable table) {
+        boolean validExpr = true;
+
+        Type arrayType = getExprType(expr, table);
+
+        // Checks if values of array have different types
+        for (JmmNode child : expr.getChildren()) {
+            Type childType = getExprType(child, table);
+            if (!Objects.equals(childType.getName(), arrayType.getName())) {
+                validExpr = false;
+                break;
+            }
+        }
+
+        if (!validExpr) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(expr),
+                    NodeUtils.getColumn(expr),
+                    "Invalid array initialization expression",
+                    null)
+            );
+        }
+
+        return null;
+    }
+
+    private Void visitVarArgArray(JmmNode expr, SymbolTable table) {
+        int varArgCounter = 0;
+
+        for (JmmNode siblingExpr : expr.getParent().getChildren()) {
+            String siblingKind = siblingExpr.getKind();
+            if (Objects.equals(siblingKind, "VarArgArray")) {
+                varArgCounter++;
+            }
+        }
+
+        if (varArgCounter > 1) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(expr),
+                    NodeUtils.getColumn(expr),
+                    "Too many varargs",
                     null)
             );
         }
