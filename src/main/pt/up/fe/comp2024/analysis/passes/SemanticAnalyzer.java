@@ -24,6 +24,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
     @Override
     public void buildVisitor() {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
+        addVisit(Kind.MAIN_METHOD_DECL, this::visitMainMethodDecl);
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
         addVisit("ArrayAccessExpr", this::visitArrayAccessExpr);
@@ -34,9 +35,14 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         addVisit(Kind.ARRAY_INIT_EXPRESSION, this::visitArrayInitExpr);
         addVisit(Kind.VAR_ARG_ARRAY ,this::visitVarArgArray);
     }
-
+    private Void visitMainMethodDecl(JmmNode method, SymbolTable table) {
+        currentMethod = "main";
+        return null;
+    }
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
+        var retur = method.getChildren(Kind.RETURN_STMT);
+
         return null;
     }
 
@@ -310,15 +316,20 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
 
     private Void visitVarArgArray(JmmNode expr, SymbolTable table) {
         int varArgCounter = 0;
-
+        boolean found_var_arg =  false;
+        boolean error = false;
         for (JmmNode siblingExpr : expr.getParent().getChildren()) {
             String siblingKind = siblingExpr.getKind();
+            if (found_var_arg){
+                error = true;
+                break;
+            }
             if (Objects.equals(siblingKind, "VarArgArray")) {
-                varArgCounter++;
+                found_var_arg = true;
             }
         }
 
-        if (varArgCounter > 1) {
+        if (error) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(expr),
