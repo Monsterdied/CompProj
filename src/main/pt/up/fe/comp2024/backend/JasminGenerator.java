@@ -307,7 +307,7 @@ public class JasminGenerator {
             code.append(generators.apply(arg));
         }
         code.append("invokestatic ").append(getClass(((Operand)call.getCaller()).getName()));
-        code.append(".").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
+        code.append("/").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
         code.append("(");
         for (var arg : call.getArguments()) {
             code.append(field_to_jasmin(arg.getType()));
@@ -317,6 +317,7 @@ public class JasminGenerator {
     }
     private String DealWithInvokeSpecial(CallInstruction call){
         var code = new StringBuilder();
+        code.append(generators.apply(call.getCaller()));
         for (var arg : call.getArguments()) {
             code.append(generators.apply(arg));
         }
@@ -337,7 +338,6 @@ public class JasminGenerator {
             code.append("newarray ").append(TypeToJasminArrayType(array.getElementType())).append(NL);
         }else {
             code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
-            code.append("dup").append(NL);
         }
         return code.toString();
     }
