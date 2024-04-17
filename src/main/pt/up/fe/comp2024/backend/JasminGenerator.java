@@ -271,6 +271,7 @@ public class JasminGenerator {
 
         return code.toString();
     }
+    //TODO merge this with generateCallInstruction and generateCallInstructionFromAssign
     private String generateCallInstruction(CallInstruction call){
         var code = new StringBuilder();
         // load arguments
