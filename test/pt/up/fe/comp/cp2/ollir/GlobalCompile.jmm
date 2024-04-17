@@ -4,6 +4,8 @@ class Simple {
 
     public int add(int a, int b){
         int c;
+        boolean x;
+        x = !(true && false);
         c = a + this.constInstr();
         return c;
     }
@@ -13,7 +15,7 @@ class Simple {
         int b;
         int c;
         Simple s;
-        a = 20;
+        a = (20 + 30) * 2;
         b = 10;
         s = new Simple();
         c = s.add(a,b);

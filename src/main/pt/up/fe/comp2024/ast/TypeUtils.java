@@ -43,6 +43,8 @@ public class TypeUtils {
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
             case NEW_CLASS_EXPR -> getNewType(expr,table);
+            case PAREN_EXPR -> getExprType(expr.getJmmChild(0), table);
+            case NOT_EXPR -> new Type(BOOLEAN_TYPE_NAME, false);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
         };
 
