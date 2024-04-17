@@ -37,7 +37,7 @@ public class TypeUtils {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
             case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table);
-            case METHOD_CALL_EXPR -> new Type(VOID, false);
+            case METHOD_CALL_EXPR -> new Type("null", false);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);

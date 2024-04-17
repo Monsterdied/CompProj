@@ -102,7 +102,7 @@ paramList
     ;
 
 param
-    : type VARAGS? name=ID?
+    : type VARAGS? name=ID? #VarArgArray
     ;
 
 stmt

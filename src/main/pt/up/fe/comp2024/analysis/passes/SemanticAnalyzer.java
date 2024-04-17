@@ -11,6 +11,8 @@ import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
@@ -27,6 +29,8 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         addVisit("ArrayAccessExpr", this::visitArrayAccessExpr);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
         addVisit("IfStmt", this::visitIfStmt);
+        addVisit("WhileStmt", this::visitWhileStmt);
+        addVisit("MethodCallExpr", this::visitMethodCallExpr);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -186,6 +190,11 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
             return null;
         }
 
+        // Don't know return value of function
+        if (Objects.equals(valueType.getName(), "null")) {
+            return null;
+        }
+
         // Check if the types are compatible
         if (!assigneeType.equals(valueType)) {
             addReport(Report.newError(
@@ -208,7 +217,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         Type conditionType = TypeUtils.getExprType(conditionExpr, table);
 
         // Check if the condition expression returns a boolean
-        if (!conditionType.getName().equals("boolean")) {
+        if (!isValidConditionType(conditionType)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(conditionExpr),
@@ -221,4 +230,52 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         return null;
     }
 
+    private Void visitWhileStmt(JmmNode ifElseStmt, SymbolTable table) {
+        // Get the condition expression
+        JmmNode conditionExpr = ifElseStmt.getChildren().get(0);
+
+        // Get the type of the condition expression
+        Type conditionType = TypeUtils.getExprType(conditionExpr, table);
+
+        // Check if the condition expression returns a boolean
+        if (!isValidConditionType(conditionType)) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(conditionExpr),
+                    NodeUtils.getColumn(conditionExpr),
+                    "Expression in condition must return a boolean.",
+                    null)
+            );
+        }
+
+        return null;
+    }
+
+    private Boolean isValidConditionType(Type conditionType) {
+        return conditionType.getName().equals("boolean");
+    }
+
+    private Void visitMethodCallExpr(JmmNode expr, SymbolTable table) {
+        // Get type
+        Type childType = getExprType(expr.getChild(0), table);
+        String typeName = childType.getName();
+
+        // Class is not super class, so it is import
+        if (!Objects.equals(typeName, table.getClassName())) {
+            return null;
+        }
+
+        // Method does not belong to super class
+        if (!table.getMethods().contains(expr.get("name")) && table.getSuper().isEmpty()) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(expr),
+                    NodeUtils.getColumn(expr),
+                    "Invalid method call.",
+                    null)
+            );
+        }
+
+        return null;
+    }
 }
