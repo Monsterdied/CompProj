@@ -239,8 +239,11 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // generate code for loading what's on the right
+        if (assign.getRhs() instanceof CallInstruction){
+            code.append(generateCallInstructionFromAssign((CallInstruction) assign.getRhs()));
+        }else{
         code.append(generators.apply(assign.getRhs()));
-
+        }
         // store value in the stack in destination
         var lhs = assign.getDest();
 
@@ -273,8 +276,21 @@ public class JasminGenerator {
         // load arguments
         switch (call.getInvocationType()){
             case invokestatic -> code.append(DealWithInvokeStatic(call));
-            case invokespecial -> code.append(DealWithInvokeSpecial(call));
-            case invokevirtual -> code.append(DealWithInvokeVirtual(call));
+            case invokespecial -> code.append(DealWithInvokeSpecial(call,false));
+            case invokevirtual -> code.append(DealWithInvokeVirtual(call,false));
+            case NEW -> code.append(DealWithNew(call));
+        }
+        //code.append(generators.apply(call.getCaller()));
+        return code.toString();
+        // invoke method
+    }
+    private String generateCallInstructionFromAssign(CallInstruction call){
+        var code = new StringBuilder();
+        // load arguments
+        switch (call.getInvocationType()){
+            case invokestatic -> code.append(DealWithInvokeStatic(call));
+            case invokespecial -> code.append(DealWithInvokeSpecial(call,true));
+            case invokevirtual -> code.append(DealWithInvokeVirtual(call,true));
             case NEW -> code.append(DealWithNew(call));
         }
         //code.append(generators.apply(call.getCaller()));
@@ -284,7 +300,7 @@ public class JasminGenerator {
     public static String removeQuotes(String input) {
         return input.replaceAll("^\"|\"$", "");
     }
-    private String DealWithInvokeVirtual(CallInstruction call){
+    private String DealWithInvokeVirtual(CallInstruction call,boolean assignCalled){
         var code = new StringBuilder();
         //probably wrong
         code.append(generators.apply(call.getCaller()));
@@ -298,6 +314,9 @@ public class JasminGenerator {
             code.append(field_to_jasmin(arg.getType()));
         }
         code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
+        if ( ! assignCalled && call.getReturnType().getTypeOfElement() != VOID ){
+            code.append("pop").append(NL);
+        }
         return code.toString();
     }
     private String DealWithInvokeStatic(CallInstruction call){
@@ -315,7 +334,7 @@ public class JasminGenerator {
         code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
         return code.toString();
     }
-    private String DealWithInvokeSpecial(CallInstruction call){
+    private String DealWithInvokeSpecial(CallInstruction call,boolean assignedCalled){
         var code = new StringBuilder();
         code.append(generators.apply(call.getCaller()));
         for (var arg : call.getArguments()) {
@@ -327,6 +346,9 @@ public class JasminGenerator {
             code.append(field_to_jasmin(arg.getType()));
         }
         code.append(")V").append(NL);
+        if ( ! assignedCalled && call.getReturnType().getTypeOfElement() != VOID ){
+            code.append("pop").append(NL);
+        }
         return code.toString();
     }
     private String DealWithNew(CallInstruction call){
