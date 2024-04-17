@@ -41,7 +41,6 @@ public class TypeUtils {
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
-
             case NEW_CLASS_EXPR -> new Type(expr.get("name"),false);
             case NEW_ARRAY_EXPR -> new Type(expr.getChild(0).get("name"), true);
             case ARRAY_INIT_EXPRESSION -> new Type(getExprType(expr.getChild(0), table).getName(), true);
