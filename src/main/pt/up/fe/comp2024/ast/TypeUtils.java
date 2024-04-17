@@ -31,18 +31,20 @@ public class TypeUtils {
      */
     public static Type getExprType(JmmNode expr, SymbolTable table) {
 
-
         var kind = Kind.fromString(expr.getKind());
 
         Type type = switch (kind) {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
             case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table);
-            case METHOD_CALL_EXPR -> new Type(VOID, false);
+            case METHOD_CALL_EXPR -> new Type("null", false);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
-            case NEW_CLASS_EXPR -> getNewType(expr,table);
+            case NEW_CLASS_EXPR -> new Type(expr.get("name"),false);
+            case NEW_ARRAY_EXPR -> new Type(expr.getChild(0).get("name"), true);
+            case ARRAY_INIT_EXPRESSION -> new Type(getExprType(expr.getChild(0), table).getName(), true);
+            case VAR_ARG_ARRAY -> new Type(expr.getChild(0).get("name"), true);
             case PAREN_EXPR -> getExprType(expr.getJmmChild(0), table);
             case NOT_EXPR -> new Type(BOOLEAN_TYPE_NAME, false);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
@@ -120,10 +122,6 @@ public class TypeUtils {
     }
 
     private static Type getThisType(JmmNode binaryExpr,SymbolTable table) {
-        return new Type(table.getClassName(),false);
-    }
-
-    private static Type getNewType(JmmNode newExpr,SymbolTable table){
         return new Type(table.getClassName(),false);
     }
 

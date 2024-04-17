@@ -11,6 +11,10 @@ import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
 public class SemanticAnalyzer extends AnalysisVisitor  {
@@ -25,6 +29,10 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         addVisit("ArrayAccessExpr", this::visitArrayAccessExpr);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
         addVisit("IfStmt", this::visitIfStmt);
+        addVisit("WhileStmt", this::visitWhileStmt);
+        addVisit("MethodCallExpr", this::visitMethodCallExpr);
+        addVisit(Kind.ARRAY_INIT_EXPRESSION, this::visitArrayInitExpr);
+        addVisit(Kind.VAR_ARG_ARRAY ,this::visitVarArgArray);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -174,6 +182,21 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         JmmNode valueExpr = assignStmt.getChildren().get(1);
         Type valueType = TypeUtils.getExprType(valueExpr, table);
 
+        // Pass if both variables are imports
+        if (table.getImports().contains(assigneeType.getName()) && table.getImports().contains(valueType.getName())) {
+            return null;
+        }
+
+        // Pass if assignee extends value
+        if (Objects.equals(table.getSuper(), assigneeType.getName()) && Objects.equals(table.getClassName(), valueType.getName())) {
+            return null;
+        }
+
+        // Don't know return value of function
+        if (Objects.equals(valueType.getName(), "null")) {
+            return null;
+        }
+
         // Check if the types are compatible
         if (!assigneeType.equals(valueType)) {
             addReport(Report.newError(
@@ -196,7 +219,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         Type conditionType = TypeUtils.getExprType(conditionExpr, table);
 
         // Check if the condition expression returns a boolean
-        if (!conditionType.getName().equals("boolean")) {
+        if (!isValidConditionType(conditionType)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(conditionExpr),
@@ -209,4 +232,102 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         return null;
     }
 
+    private Void visitWhileStmt(JmmNode ifElseStmt, SymbolTable table) {
+        // Get the condition expression
+        JmmNode conditionExpr = ifElseStmt.getChildren().get(0);
+
+        // Get the type of the condition expression
+        Type conditionType = TypeUtils.getExprType(conditionExpr, table);
+
+        // Check if the condition expression returns a boolean
+        if (!isValidConditionType(conditionType)) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(conditionExpr),
+                    NodeUtils.getColumn(conditionExpr),
+                    "Expression in condition must return a boolean.",
+                    null)
+            );
+        }
+
+        return null;
+    }
+
+    private Boolean isValidConditionType(Type conditionType) {
+        return conditionType.getName().equals("boolean");
+    }
+
+    private Void visitMethodCallExpr(JmmNode expr, SymbolTable table) {
+        // Get type
+        Type childType = getExprType(expr.getChild(0), table);
+        String typeName = childType.getName();
+
+        // Class is not super class, so it is import
+        if (!Objects.equals(typeName, table.getClassName())) {
+            return null;
+        }
+
+        // Method does not belong to super class
+        if (!table.getMethods().contains(expr.get("name")) && table.getSuper().isEmpty()) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(expr),
+                    NodeUtils.getColumn(expr),
+                    "Invalid method call.",
+                    null)
+            );
+        }
+
+        return null;
+    }
+
+    private Void visitArrayInitExpr(JmmNode expr, SymbolTable table) {
+        boolean validExpr = true;
+
+        Type arrayType = getExprType(expr, table);
+
+        // Checks if values of array have different types
+        for (JmmNode child : expr.getChildren()) {
+            Type childType = getExprType(child, table);
+            if (!Objects.equals(childType.getName(), arrayType.getName())) {
+                validExpr = false;
+                break;
+            }
+        }
+
+        if (!validExpr) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(expr),
+                    NodeUtils.getColumn(expr),
+                    "Invalid array initialization expression",
+                    null)
+            );
+        }
+
+        return null;
+    }
+
+    private Void visitVarArgArray(JmmNode expr, SymbolTable table) {
+        int varArgCounter = 0;
+
+        for (JmmNode siblingExpr : expr.getParent().getChildren()) {
+            String siblingKind = siblingExpr.getKind();
+            if (Objects.equals(siblingKind, "VarArgArray")) {
+                varArgCounter++;
+            }
+        }
+
+        if (varArgCounter > 1) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(expr),
+                    NodeUtils.getColumn(expr),
+                    "Too many varargs",
+                    null)
+            );
+        }
+
+        return null;
+    }
 }

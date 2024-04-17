@@ -93,8 +93,10 @@ public class JmmSymbolTableBuilder {
                     method.getChildren().get(1).getChildren().stream()// não sei se funciona com array
                             .forEach(var -> {
                                 Type type;
-                                if (var.getChildren(TYPE).get(0).getChildren().size() == 0) {
+                                if (var.getChildren(TYPE).get(0).getChildren().size() == 0 && !Objects.equals(var.getKind(), "VarArgArray")) {
                                     type = new Type(var.getChildren("Type").get(0).get("name"), false);
+                                } else if (Objects.equals(var.getKind(), "VarArgArray")) {
+                                    type = new Type(var.getChildren("Type").get(0).get("name"), true);
                                 } else {
                                     type = new Type(var.getChildren("Type").get(0).getChildren().get(0).get("name"), true);
                                 }

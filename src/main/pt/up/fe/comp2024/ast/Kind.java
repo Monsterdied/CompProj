@@ -28,7 +28,11 @@ public enum Kind {
     BOOLEAN_LITERAL,
 
     ARRAY_ACCESS_EXPR,
-    VAR_REF_EXPR;
+    VAR_REF_EXPR,
+    NEW_ARRAY_EXPR,
+    ARRAY_INIT_EXPRESSION,
+    VAR_ARG_ARRAY;
+
 
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);

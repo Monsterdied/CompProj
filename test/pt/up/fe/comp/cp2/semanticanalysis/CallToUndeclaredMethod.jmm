@@ -4,7 +4,7 @@ class CallToUndeclaredMethod {
 
     }
 
-    public int foo() {
+    public int foo(int b) {
         CallToUndeclaredMethod a;
         a = new CallToUndeclaredMethod();
 
