@@ -62,7 +62,13 @@ public class TypeUtils {
                     return new Type(methodName, false);
                 }
             }
-            if (table.getMethods().contains(methodName)) {
+            if (Objects.equals(methodCall.getChild(0).getKind(), "VarRefExpr")) { // might be imported function
+                Type importedClassType = getVarExprType(methodCall.getChild(0), table);
+                if (table.getImports().contains(importedClassType.getName())) {
+                    return new Type(null, false);
+                }
+            }
+            else if (table.getMethods().contains(methodName)) {
                 // Get class expression
                 JmmNode parentExpr = methodCall.getParent();
                 while (!Objects.equals(parentExpr.getKind(), "ClassDecl")) {
