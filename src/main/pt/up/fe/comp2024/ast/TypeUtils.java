@@ -72,7 +72,12 @@ public class TypeUtils {
                 // Get methods and check type
                 for (JmmNode siblingExpr : parentExpr.getChildren()) {
                     if (Objects.equals(siblingExpr.get("name"), methodName)) {
-                        return new Type(siblingExpr.getChild(0).get("name"), false);
+                        JmmNode methodTypeExpr = siblingExpr.getChild(0);
+                        if (methodTypeExpr.getChildren().isEmpty()) { // Return value
+                            return new Type(siblingExpr.getChild(0).get("name"), false);
+                        } else { // Return array
+                            return new Type(siblingExpr.getChild(0).getChild(0).get("name"), true);
+                        }
                     }
                 }
             }
