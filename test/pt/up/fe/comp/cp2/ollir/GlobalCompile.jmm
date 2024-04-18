@@ -2,6 +2,36 @@ import io;
 import java.util.List;
 class Simple {
 
+    int field_int;
+    boolean field_bool;
+
+    public int testing(){
+        Simple s;
+        int a;
+        (new Simple()).arithmetic(io.valid());
+    }
+
+    public int arithmetic(){
+        int a;
+        int b;
+        int c;
+        a = 10;
+        b = 20;
+        c = a + (b + b);
+    }
+
+    public int invoke(){
+
+    }
+
+    public int misc(){
+
+    }
+
+    public int structure(){
+
+    }
+
     public int add(int a, int b){
         int c;
         boolean x;

@@ -55,6 +55,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         var object = visit(nodeMethodCall.getJmmChild(0));
+        computation.append(object.getComputation());
         var objectName = object.getCode();
         List<String> imports = table.getImports();
 
