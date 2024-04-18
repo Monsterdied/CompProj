@@ -41,6 +41,53 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     private Void visitMainMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = "main";
         CurrentMethod = method;
+
+        // Checks for 0 or 1 return
+        int returnCounter = 0;
+        boolean hasReturn = false;
+        List<JmmNode> children = method.getChildren();
+        for (JmmNode child : children) {
+            if (Objects.equals(child.getKind(), "ReturnStmt")) {
+                if (!Objects.equals(child.getChild(0).get("name"), "ReturnStmt")) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(method),
+                            NodeUtils.getColumn(method),
+                            "Return inside main is not void",
+                            null)
+                    );
+                    return null;
+                }
+
+                hasReturn = true;
+                returnCounter++;
+            }
+        }
+
+        if (!(returnCounter == 0 || returnCounter == 1)) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Number of returns inside main function is not zero or one",
+                    null)
+            );
+            return null;
+        }
+
+        // Checks if last expression inside function is a return
+        if (hasReturn) {
+            if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(method),
+                        NodeUtils.getColumn(method),
+                        "Last expression inside function is not ReturnStmt",
+                        null)
+                );
+            }
+        }
+
         return null;
     }
 
@@ -100,7 +147,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                     null)
             );
         }
-
 
         return null;
     }

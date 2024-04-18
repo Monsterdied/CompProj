@@ -1,6 +1,6 @@
 import io;
 class Simple {
-    public int cringe(){
+    public int cringe() {
         int c;
         c = 1;
         return c;
