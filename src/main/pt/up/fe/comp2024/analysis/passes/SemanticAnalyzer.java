@@ -598,6 +598,30 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                             "Duplicated fields",
                             null)
                     );
+                    return null;
+                }
+            }
+        }
+
+        // Checks duplicated locals
+        for (String methodName : table.getMethods()) {
+            List<Symbol> localList = table.getLocalVariables(methodName);
+            for (Symbol local1 : localList) {
+                int counter = 0;
+                for (Symbol local2 : localList) {
+                    if (Objects.equals(local1, local2)) {
+                        counter++;
+                    }
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated locals",
+                            null)
+                    );
+                    return null;
                 }
             }
         }

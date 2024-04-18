@@ -2,6 +2,7 @@ import io;
 class Simple {
     public int cringe() {
         int c;
+        int b;
         c = 1;
         return c;
     }
