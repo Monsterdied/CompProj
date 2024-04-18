@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.analysis.passes;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -575,6 +576,26 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                             NodeUtils.getLine(expr),
                             NodeUtils.getColumn(expr),
                             "Duplicated imports",
+                            null)
+                    );
+                }
+            }
+        }
+
+        // Checks duplicated fields
+        List<Symbol> fields = table.getFields();
+        for (Symbol field1 : fields) {
+            int counter = 0;
+            for (Symbol field2 : fields) {
+                if (Objects.equals(field1, field2)) {
+                    counter++;
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated fields",
                             null)
                     );
                 }
