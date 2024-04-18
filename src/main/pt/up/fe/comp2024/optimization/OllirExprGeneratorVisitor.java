@@ -94,21 +94,13 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     computation.append(expr.getComputation());
 
                     if(arg.isInstance(METHOD_CALL_EXPR)){
-                        if(nodeMethodCall.getAncestor(ASSIGN_STMT).isPresent()) {
-                            var variable = nodeMethodCall.getAncestor(ASSIGN_STMT).get().getChildren(VAR_REF_EXPR).get(0);
-                            Type resType = TypeUtils.getExprType(variable, table);
-                            String resOllirType = OptUtils.toOllirType(resType);
-                            String tempVar = OptUtils.getTemp() + resOllirType;
-                            computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
-                            code.append(tempVar);
 
-                        }else {
-                            Type resType = TypeUtils.getExprType(arg, table);
-                            String resOllirType = OptUtils.toOllirType(resType);
-                            String tempVar = OptUtils.getTemp() + resOllirType;
-                            computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
-                            code.append(tempVar);
-                        }
+                        Type resType = TypeUtils.getExprType(arg, table);
+                        String resOllirType = OptUtils.toOllirType(resType);
+                        String tempVar = OptUtils.getTemp() + resOllirType;
+                        computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
+                        code.append(tempVar);
+
                     }
                     else {
                         code.append(expr.getCode());
@@ -126,14 +118,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             return new OllirExprResult(code.toString(), computation);
         }
         if(isStatic){
-            if(nodeMethodCall.getAncestor(ASSIGN_STMT).isPresent()){
-                var variable = nodeMethodCall.getAncestor(ASSIGN_STMT).get().getChildren(VAR_REF_EXPR).get(0);
-                var type = TypeUtils.getExprType(variable,table);
-                var ollir_type = OptUtils.toOllirType(type);
-                code.append(")").append(ollir_type).append(END_STMT);
-            }else{
                 code.append(").V").append(END_STMT);
-            }
         }
         else{
             if(table.getMethods().contains(nodeMethodCall.get("name"))){
