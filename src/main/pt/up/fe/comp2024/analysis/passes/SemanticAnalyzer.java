@@ -184,7 +184,17 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         // Get the types of the left and right operands
         Type leftType = getExprType(leftOperand, table,currentMethod);
         Type rightType = getExprType(rightOperand, table,currentMethod);
+        if (leftType == null || rightType == null){
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(binaryExpr),
+                    NodeUtils.getColumn(binaryExpr),
+                    "Class Not imported",
+                    null)
 
+            );
+            return null;
+        }
         // Perform type compatibility check based on the operator
         if (!isCompatible(operator, leftType, rightType)) {
             String leftTypeName = leftType.print();
@@ -214,19 +224,32 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         // Check if either operand is an array
         boolean leftIsArray = leftType.isArray();
         boolean rightIsArray = rightType.isArray();
-
+        boolean leftAny = false;
+        boolean rigthAny = false;
         // Check if both types are arrays
         if (leftIsArray && rightIsArray) {
             // Reject array operations
             return false;
         }
-
+        if ( leftType.getName() == null ){
+            leftAny = true;
+        }
+        if ( rightType.getName() == null ){
+            rigthAny = true;
+        }
         // Perform type compatibility check based on the operator
         switch (operator) {
             case "+":
             case "-":
             case "*":
             case "/":
+                if (rigthAny && leftAny){
+                    return true;
+                } else if (rigthAny) {
+                    return rightType.getName().equals("int") && !rightIsArray;
+                }else if (leftAny) {
+                    return !leftIsArray && leftType.getName().equals("int");
+                }
                 // For arithmetic operations, both operands must be of type int
                 return leftType.getName().equals("int") && rightType.getName().equals("int") &&
                         !leftIsArray && !rightIsArray;
@@ -290,7 +313,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         if (Objects.equals(table.getSuper(), assigneeType.getName()) && Objects.equals(table.getClassName(), valueType.getName())) {
             return null;
         }
-        if (valueType == null){
+        if (valueType == null || assigneeType == null){
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(assignStmt),
@@ -304,19 +327,8 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         if (Objects.equals(valueType.getName(), "null")) {
             return null;
         }
-        if (assigneeType == null){
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(assignStmt),
-                    NodeUtils.getColumn(assignStmt),
-                    "Class Not imported",
-                    null)
-
-            );
-            return null;
-        }
         // Check if the types are compatible
-        if (!assigneeType.equals(valueType)) {
+        if (!assigneeType.equals(valueType) && valueType.getName() != null ) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(assignStmt),

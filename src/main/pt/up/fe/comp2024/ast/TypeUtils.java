@@ -38,7 +38,7 @@ public class TypeUtils {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table,currentMethod);
             case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table,currentMethod);
-            case METHOD_CALL_EXPR -> dealWithMethodCall(expr, table);
+            case METHOD_CALL_EXPR -> dealWithMethodCall(expr, table,currentMethod);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
@@ -54,12 +54,23 @@ public class TypeUtils {
         return type;
     }
     // TODO: Deal with method calls Its Bad delete all
-    private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table) {
+    //TODO: Mal feito
+    private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table,String currentmethod) {
         var methodName = methodCall.get("name");
+        var classType =  methodCall.get("name");
+        if ( methodCall.getChildren("VarRefExpr").size() > 0){
+            methodName = getExprType(methodCall.getChildren("VarRefExpr").get(0),table,currentmethod).getName();
+        }
+        if ( methodCall.getChildren("ThisExpr").size() > 0){
+            return table.getReturnType(methodName);
+        }
         if(methodCall.getChildren().size() > 0){
+            if (table.getClassName().equals(methodName)){
+                return table.getReturnType(classType);
+            }
             for (var imported : table.getImports()) {
                 if (imported.endsWith(methodName)) {
-                    return new Type(methodName, false);
+                    return new Type(null, false);
                 }
             }
         }else{
