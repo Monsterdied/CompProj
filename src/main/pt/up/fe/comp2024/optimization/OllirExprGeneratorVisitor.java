@@ -134,7 +134,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var resOllirType = node.get("name");
         var tempVar = OptUtils.getTemp() + "." +resOllirType;
         computation.append(tempVar).append(SPACE).append(ASSIGN).append(".").append(resOllirType).append(SPACE).append("new(").append(resOllirType).append(")").append(".").append(resOllirType).append(END_STMT);
-        computation.append(String.format("invokespecial(%s, \"\").V", tempVar)).append(END_STMT);
+        computation.append(String.format("invokespecial(%s, \"<init>\").V", tempVar)).append(END_STMT);
         code.append(tempVar);
         return new OllirExprResult(code.toString(),computation.toString());
     }
