@@ -341,6 +341,10 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             case "-":
             case "*":
             case "/":
+            case "<":
+            case "<=":
+            case ">":
+            case ">=":
                 if (rigthAny && leftAny) {
                     return true;
                 } else if (rigthAny) {
@@ -351,10 +355,18 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                 // For arithmetic operations, both operands must be of type int
                 return leftType.getName().equals("int") && rightType.getName().equals("int") &&
                         !leftIsArray && !rightIsArray;
-            case "==":
-            case "!=":
-                // For equality operations, both operands must have the same type
-                return leftType.equals(rightType);
+            case "&&":
+            case "||":
+                if (rigthAny && leftAny) {
+                    return true;
+                } else if (rigthAny) {
+                    return rightType.getName().equals("int") && !rightIsArray;
+                } else if (leftAny) {
+                    return !leftIsArray && leftType.getName().equals("int");
+                }
+                // For this type of operations, both operands must be of type boolean
+                return leftType.getName().equals("boolean") && rightType.getName().equals("boolean") &&
+                        !leftIsArray && !rightIsArray;
             // Add cases for other operators as needed
             default:
                 return true; // Default to true for operators not explicitly handled
