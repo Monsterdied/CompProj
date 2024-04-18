@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.List;
 
@@ -29,6 +30,67 @@ public class TypeUtils {
      * @param table
      * @return
      */
+    public static Type getExprType(JmmNode expr, SymbolTable table,String currentMethod) {
+
+        var kind = Kind.fromString(expr.getKind());
+
+        Type type = switch (kind) {
+            case BINARY_EXPR -> getBinExprType(expr);
+            case VAR_REF_EXPR -> getVarExprType(expr, table,currentMethod);
+            case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table,currentMethod);
+            case METHOD_CALL_EXPR -> dealWithMethodCall(expr, table,currentMethod);
+            case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
+            case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
+            case THIS_EXPR -> getThisType(expr,table);
+            case NEW_CLASS_EXPR -> new Type(expr.get("name"),false);
+            case NEW_ARRAY_EXPR -> new Type(expr.getChild(0).get("name"), true);
+            case ARRAY_INIT_EXPRESSION -> new Type(getExprType(expr.getChild(0), table,currentMethod).getName(), true);
+            case VAR_ARG_ARRAY -> new Type(expr.getChild(0).get("name"), true);
+            case PAREN_EXPR -> getExprType(expr.getJmmChild(0), table,currentMethod);
+            case NOT_EXPR -> new Type(BOOLEAN_TYPE_NAME, false);
+            default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
+        };
+
+        return type;
+    }
+    // TODO: Deal with method calls Its Bad delete all
+    //TODO: Mal feito
+    private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table,String currentmethod) {
+        var methodName = methodCall.get("name");
+        var classType =  methodCall.get("name");
+        if ( methodCall.getChildren("VarRefExpr").size() > 0){
+            methodName = getExprType(methodCall.getChildren("VarRefExpr").get(0),table,currentmethod).getName();
+        }
+        if ( methodCall.getChildren("ThisExpr").size() > 0){
+            return table.getReturnType(methodName);
+        }
+        if(methodCall.getChildren().size() > 0){
+            if (table.getClassName().equals(methodName)){
+                return table.getReturnType(classType);
+            }
+            for (var imported : table.getImports()) {
+                if (imported.endsWith(methodName)) {
+                    return new Type(null, false);
+                }
+            }
+        }else{
+            return table.getReturnType(methodName);
+        }
+        return null;
+    }
+    private static Type getBinExprType(JmmNode binaryExpr) {
+        // TODO: Simple implementation that needs to be expanded ( already expanded x1)
+
+        String operator = binaryExpr.get("op");
+
+        return switch (operator) {
+            case "+", "*", "/", "-" -> new Type(INT_TYPE_NAME, false);
+            case "&&", "<", "||", ">", "<=", ">=", "!" -> new Type(BOOLEAN_TYPE_NAME, false);
+            default ->
+                    throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
+        };
+    }
+    //TODO: please fix this tomorrow TC
     public static Type getExprType(JmmNode expr, SymbolTable table) {
 
         var kind = Kind.fromString(expr.getKind());
@@ -36,8 +98,8 @@ public class TypeUtils {
         Type type = switch (kind) {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
-            case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table);
-            case METHOD_CALL_EXPR -> new Type("null", false);
+            case ARRAY_ACCESS_EXPR -> getVarExprType(expr.getJmmChild(0), table);
+            case METHOD_CALL_EXPR -> table.getReturnType(expr.get("name"));
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
@@ -51,19 +113,6 @@ public class TypeUtils {
         };
 
         return type;
-    }
-
-    private static Type getBinExprType(JmmNode binaryExpr) {
-        // TODO: Simple implementation that needs to be expanded ( already expanded x1)
-
-        String operator = binaryExpr.get("op");
-
-        return switch (operator) {
-            case "+", "*", "/", "-" -> new Type(INT_TYPE_NAME, false);
-            case "&&", "<", "||", ">", "<=", ">=", "!" -> new Type(BOOLEAN_TYPE_NAME, false);
-            default ->
-                    throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
-        };
     }
 
     private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
@@ -117,8 +166,36 @@ public class TypeUtils {
         return type;
     }
 
-    private static Type getArrayAccessExprType(JmmNode arrayAccessExpr, SymbolTable table) {
-        return getVarExprType(arrayAccessExpr.getJmmChild(0), table);
+    private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table,String currentMethod){
+
+        var imports= table.getImports();
+        String name=varRefExpr.get("name");
+        for(String a : imports){
+            if(a.endsWith(name)){
+                return new Type(name, false);
+            }
+        }
+
+        for (var symbol : table.getFields()) {
+            if (symbol.getName().equals(varRefExpr.get("name"))) {
+                return symbol.getType();
+            }
+        }
+        for(var param : table.getParameters(currentMethod)){
+            if(param.getName().equals(varRefExpr.get("name"))){
+                return param.getType();
+            }
+        }
+        for (var local : table.getLocalVariables(currentMethod)) {
+            if (local.getName().equals(varRefExpr.get("name"))) {
+                return local.getType();
+            }
+        }
+        return new Type(null, false);
+    }
+
+    private static Type getArrayAccessExprType(JmmNode arrayAccessExpr, SymbolTable table,String currentMethod){
+        return getVarExprType(arrayAccessExpr.getJmmChild(0), table,currentMethod);
     }
 
     private static Type getThisType(JmmNode binaryExpr,SymbolTable table) {
