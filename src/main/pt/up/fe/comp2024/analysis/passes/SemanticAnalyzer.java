@@ -68,6 +68,38 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                     null)
             );
         }
+
+        // Checks for only 1 return
+        int returnCounter = 0;
+        List<JmmNode> children = method.getChildren();
+        for (JmmNode child : children) {
+            if (Objects.equals(child.getKind(), "ReturnStmt")) {
+                returnCounter++;
+            }
+        }
+
+        if (returnCounter != 1) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Number of returns inside function is not one",
+                    null)
+            );
+        }
+
+        // Checks if last expression inside function is a return
+        /*if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Last expression inside function is not ReturnStmt",
+                    null)
+            );
+        }*/
+
+
         return null;
     }
 
