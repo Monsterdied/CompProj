@@ -68,7 +68,7 @@ public class TypeUtils {
                     return new Type(null, false);
                 }
             }
-            else if (table.getMethods().contains(methodName)) {
+            if (table.getMethods().contains(methodName)) {
                 // Get class expression
                 JmmNode parentExpr = methodCall.getParent();
                 while (!Objects.equals(parentExpr.getKind(), "ClassDecl")) {
@@ -77,12 +77,14 @@ public class TypeUtils {
 
                 // Get methods and check type
                 for (JmmNode siblingExpr : parentExpr.getChildren()) {
-                    if (Objects.equals(siblingExpr.get("name"), methodName)) {
-                        JmmNode methodTypeExpr = siblingExpr.getChild(0);
-                        if (methodTypeExpr.getChildren().isEmpty()) { // Return value
-                            return new Type(siblingExpr.getChild(0).get("name"), false);
-                        } else { // Return array
-                            return new Type(siblingExpr.getChild(0).getChild(0).get("name"), true);
+                    if (!Objects.equals(siblingExpr.getKind(), "MainMethodDecl")) { // Doesn't check main decl
+                        if (Objects.equals(siblingExpr.get("name"), methodName)) {
+                            JmmNode methodTypeExpr = siblingExpr.getChild(0);
+                            if (methodTypeExpr.getChildren().isEmpty()) { // Method returns value
+                                return new Type(siblingExpr.getChild(0).get("name"), false);
+                            } else { // Method returns array
+                                return new Type(siblingExpr.getChild(0).getChild(0).get("name"), true);
+                            }
                         }
                     }
                 }

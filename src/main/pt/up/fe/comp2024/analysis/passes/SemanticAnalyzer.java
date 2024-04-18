@@ -296,6 +296,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         if (Objects.equals(table.getSuper(), assigneeType.getName()) && Objects.equals(table.getClassName(), valueType.getName())) {
             return null;
         }
+
         if (valueType == null){
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -306,10 +307,12 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
             );
             return null;
         }
+
         // Don't know return value of function
         if (Objects.equals(valueType.getName(), "null")) {
             return null;
         }
+
         if (assigneeType == null){
             addReport(Report.newError(
                     Stage.SEMANTIC,
