@@ -304,6 +304,12 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         JmmNode valueExpr = assignStmt.getChildren().get(1);
         Type valueType = TypeUtils.getExprType(valueExpr, table,currentMethod);
 
+        if (valueType != null) {
+            if (valueType.getName() == null) { // Function is imported
+                return null;
+            }
+        }
+
         // Pass if both variables are imports
         if (table.getImports().contains(assigneeType.getName()) && table.getImports().contains(valueType.getName())) {
             return null;
@@ -323,6 +329,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
             );
             return null;
         }
+
         // Don't know return value of function
         if (Objects.equals(valueType.getName(), "null")) {
             return null;

@@ -7,9 +7,9 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.List;
+import java.util.Objects;
 
-import static pt.up.fe.comp2024.ast.Kind.MAIN_METHOD_DECL;
-import static pt.up.fe.comp2024.ast.Kind.METHOD_DECL;
+import static pt.up.fe.comp2024.ast.Kind.*;
 
 public class TypeUtils {
 
@@ -32,13 +32,13 @@ public class TypeUtils {
      */
     public static Type getExprType(JmmNode expr, SymbolTable table,String currentMethod) {
 
-        var kind = Kind.fromString(expr.getKind());
+        var kind = fromString(expr.getKind());
 
         Type type = switch (kind) {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table,currentMethod);
             case ARRAY_ACCESS_EXPR -> getArrayAccessExprType(expr, table,currentMethod);
-            case METHOD_CALL_EXPR -> dealWithMethodCall(expr, table,currentMethod);
+            case METHOD_CALL_EXPR -> dealWithMethodCall(expr, table);
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
             case THIS_EXPR -> getThisType(expr,table);
@@ -54,26 +54,42 @@ public class TypeUtils {
         return type;
     }
     // TODO: Deal with method calls Its Bad delete all
-    //TODO: Mal feito
-    private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table,String currentmethod) {
+    private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table) {
         var methodName = methodCall.get("name");
-        var classType =  methodCall.get("name");
-        if ( methodCall.getChildren("VarRefExpr").size() > 0){
-            methodName = getExprType(methodCall.getChildren("VarRefExpr").get(0),table,currentmethod).getName();
-        }
-        if ( methodCall.getChildren("ThisExpr").size() > 0){
-            return table.getReturnType(methodName);
-        }
-        if(methodCall.getChildren().size() > 0){
-            if (table.getClassName().equals(methodName)){
-                return table.getReturnType(classType);
-            }
+        if (!methodCall.getChildren().isEmpty()) {
             for (var imported : table.getImports()) {
                 if (imported.endsWith(methodName)) {
+                    return new Type(methodName, false);
+                }
+            }
+            if (Objects.equals(methodCall.getChild(0).getKind(), "VarRefExpr")) { // might be imported function
+                Type importedClassType = getVarExprType(methodCall.getChild(0), table);
+                if (table.getImports().contains(importedClassType.getName())) {
                     return new Type(null, false);
                 }
             }
-        }else{
+            if (table.getMethods().contains(methodName)) {
+                // Get class expression
+                JmmNode parentExpr = methodCall.getParent();
+                while (!Objects.equals(parentExpr.getKind(), "ClassDecl")) {
+                    parentExpr = parentExpr.getParent();
+                }
+
+                // Get methods and check type
+                for (JmmNode siblingExpr : parentExpr.getChildren()) {
+                    if (!Objects.equals(siblingExpr.getKind(), "MainMethodDecl")) { // Doesn't check main decl
+                        if (Objects.equals(siblingExpr.get("name"), methodName)) {
+                            JmmNode methodTypeExpr = siblingExpr.getChild(0);
+                            if (methodTypeExpr.getChildren().isEmpty()) { // Method returns value
+                                return new Type(siblingExpr.getChild(0).get("name"), false);
+                            } else { // Method returns array
+                                return new Type(siblingExpr.getChild(0).getChild(0).get("name"), true);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
             return table.getReturnType(methodName);
         }
         return null;
@@ -93,7 +109,7 @@ public class TypeUtils {
     //TODO: please fix this tomorrow TC
     public static Type getExprType(JmmNode expr, SymbolTable table) {
 
-        var kind = Kind.fromString(expr.getKind());
+        var kind = fromString(expr.getKind());
 
         Type type = switch (kind) {
             case BINARY_EXPR -> getBinExprType(expr);
