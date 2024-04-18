@@ -17,10 +17,11 @@ import java.util.Objects;
 
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
-public class SemanticAnalyzer extends AnalysisVisitor  {
+public class SemanticAnalyzer extends AnalysisVisitor {
 
     private String currentMethod;
     private JmmNode CurrentMethod;
+
     @Override
     public void buildVisitor() {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
@@ -33,20 +34,23 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         addVisit("WhileStmt", this::visitWhileStmt);
         addVisit("MethodCallExpr", this::visitMethodCallExpr);
         addVisit(Kind.ARRAY_INIT_EXPRESSION, this::visitArrayInitExpr);
-        addVisit(Kind.VAR_ARG_ARRAY ,this::visitVarArgArray);
+        addVisit(Kind.VAR_ARG_ARRAY, this::visitVarArgArray);
+        addVisit(Kind.PROGRAM, this::visitProgram);
     }
+
     private Void visitMainMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = "main";
         CurrentMethod = method;
         return null;
     }
+
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
         CurrentMethod = method;
         Type type = table.getReturnType(currentMethod);
         var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
-        Type returnType = getTypeFromExprSpeculation(retur,table);
-        if (retur == null){
+        Type returnType = getTypeFromExprSpeculation(retur, table);
+        if (retur == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(method),
@@ -55,7 +59,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
                     null)
             );
         }
-        if (!type.equals(returnType)){
+        if (!type.equals(returnType)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(method),
@@ -66,12 +70,13 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         }
         return null;
     }
+
     public Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
 
-        var imports= table.getImports();
-        String name=varRefExpr.get("name");
-        for(String a : imports){
-            if(a.endsWith(name)){
+        var imports = table.getImports();
+        String name = varRefExpr.get("name");
+        for (String a : imports) {
+            if (a.endsWith(name)) {
                 return new Type(name, false);
             }
         }
@@ -81,8 +86,8 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
                 return symbol.getType();
             }
         }
-        for(var param : table.getParameters(currentMethod)){
-            if(param.getName().equals(varRefExpr.get("name"))){
+        for (var param : table.getParameters(currentMethod)) {
+            if (param.getName().equals(varRefExpr.get("name"))) {
                 return param.getType();
             }
         }
@@ -93,52 +98,54 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         }
         return new Type(null, false);
     }
+
     //this method just gives the expected from a given expression carefull
-    private Type getTypeFromExprSpeculation(JmmNode expr, SymbolTable table){
-        switch(expr.getKind()) {
+    private Type getTypeFromExprSpeculation(JmmNode expr, SymbolTable table) {
+        switch (expr.getKind()) {
             case "ThisExpr":
-                return new Type("int",false);
+                return new Type("int", false);
             case "VarRefExpr":
-                return getVarExprType(expr,table);
+                return getVarExprType(expr, table);
             case "NewArrayExpr":
-                return new Type("int",true);
+                return new Type("int", true);
             case "NotExpr":
-                return new Type("boolean",false);
+                return new Type("boolean", false);
             case "IntegerLiteral":
-                return new Type("int",false);
+                return new Type("int", false);
             case "BooleanLiteral":
-                return new Type("boolean",false);
+                return new Type("boolean", false);
             case "BinaryExpr":
                 var op = expr.get("op");
 
-                if (op == "&&" || op == "||" || op == "<" || op == ">" || op == "<=" || op == ">=" ){
-                    return new Type("boolean",false);
+                if (op == "&&" || op == "||" || op == "<" || op == ">" || op == "<=" || op == ">=") {
+                    return new Type("boolean", false);
                 }
-                if (op == "+" || op == "-" || op == "*" || op == "/"){
-                    return new Type("int",false);
+                if (op == "+" || op == "-" || op == "*" || op == "/") {
+                    return new Type("int", false);
                 }
                 break;
             case "ArrayAccessExpr":
-                return new Type("int",false);
+                return new Type("int", false);
             case "MethodCallExpr":
                 var tmp = table.getReturnType(expr.get("name"));
-                if (tmp == null){
-                    return new Type("null",false);
+                if (tmp == null) {
+                    return new Type("null", false);
                 }
                 return tmp;
             case "ArrayInitExpression":
-                return new Type("int",true);
+                return new Type("int", true);
             case "NewClassExpr":
-                return new Type(expr.get("name"),false);
+                return new Type(expr.get("name"), false);
 
 
             default:
                 break;
-                // code block
+            // code block
         }
 
-        return new Type(null,false);
+        return new Type(null, false);
     }
+
     private Void visitVarRefExpr(JmmNode varRefExpr, SymbolTable table) {
         SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
 
@@ -182,9 +189,9 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         JmmNode rightOperand = binaryExpr.getChildren().get(1);
 
         // Get the types of the left and right operands
-        Type leftType = getExprType(leftOperand, table,currentMethod);
-        Type rightType = getExprType(rightOperand, table,currentMethod);
-        if (leftType == null || rightType == null){
+        Type leftType = getExprType(leftOperand, table, currentMethod);
+        Type rightType = getExprType(rightOperand, table, currentMethod);
+        if (leftType == null || rightType == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(binaryExpr),
@@ -231,10 +238,10 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
             // Reject array operations
             return false;
         }
-        if ( leftType.getName() == null ){
+        if (leftType.getName() == null) {
             leftAny = true;
         }
-        if ( rightType.getName() == null ){
+        if (rightType.getName() == null) {
             rigthAny = true;
         }
         // Perform type compatibility check based on the operator
@@ -243,11 +250,11 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
             case "-":
             case "*":
             case "/":
-                if (rigthAny && leftAny){
+                if (rigthAny && leftAny) {
                     return true;
                 } else if (rigthAny) {
                     return rightType.getName().equals("int") && !rightIsArray;
-                }else if (leftAny) {
+                } else if (leftAny) {
                     return !leftIsArray && leftType.getName().equals("int");
                 }
                 // For arithmetic operations, both operands must be of type int
@@ -266,7 +273,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
     private Void visitArrayAccessExpr(JmmNode arrayAccessExpr, SymbolTable table) {
         // Check if array access is done over an array
         JmmNode arrayExpr = arrayAccessExpr.getChildren().get(0);
-        Type arrayType = TypeUtils.getExprType(arrayExpr, table,currentMethod);
+        Type arrayType = TypeUtils.getExprType(arrayExpr, table, currentMethod);
 
         if (!arrayType.isArray()) {
             addReport(Report.newError(
@@ -280,7 +287,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
 
         // Check if array access index is an expression of type integer
         JmmNode indexExpr = arrayAccessExpr.getChildren().get(1);
-        Type indexType = TypeUtils.getExprType(indexExpr, table,currentMethod);
+        Type indexType = TypeUtils.getExprType(indexExpr, table, currentMethod);
 
         if (!indexType.getName().equals("int")) {
             addReport(Report.newError(
@@ -298,11 +305,11 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
         // Get the left operand (the variable being assigned to)
         JmmNode assignee = assignStmt.getChildren().get(0);
-        Type assigneeType = TypeUtils.getExprType(assignee, table,currentMethod);
+        Type assigneeType = TypeUtils.getExprType(assignee, table, currentMethod);
 
         // Get the right operand (the value being assigned)
         JmmNode valueExpr = assignStmt.getChildren().get(1);
-        Type valueType = TypeUtils.getExprType(valueExpr, table,currentMethod);
+        Type valueType = TypeUtils.getExprType(valueExpr, table, currentMethod);
 
         if (valueType != null) {
             if (valueType.getName() == null) { // Function is imported
@@ -319,7 +326,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         if (Objects.equals(table.getSuper(), assigneeType.getName()) && Objects.equals(table.getClassName(), valueType.getName())) {
             return null;
         }
-        if (valueType == null || assigneeType == null){
+        if (valueType == null || assigneeType == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(assignStmt),
@@ -335,7 +342,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
             return null;
         }
         // Check if the types are compatible
-        if (!assigneeType.equals(valueType) && valueType.getName() != null ) {
+        if (!assigneeType.equals(valueType) && valueType.getName() != null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(assignStmt),
@@ -353,7 +360,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         JmmNode conditionExpr = ifElseStmt.getChildren().get(0);
 
         // Get the type of the condition expression
-        Type conditionType = TypeUtils.getExprType(conditionExpr, table,currentMethod);
+        Type conditionType = TypeUtils.getExprType(conditionExpr, table, currentMethod);
 
         // Check if the condition expression returns a boolean
         if (!isValidConditionType(conditionType)) {
@@ -374,7 +381,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
         JmmNode conditionExpr = ifElseStmt.getChildren().get(0);
 
         // Get the type of the condition expression
-        Type conditionType = TypeUtils.getExprType(conditionExpr, table,currentMethod);
+        Type conditionType = TypeUtils.getExprType(conditionExpr, table, currentMethod);
 
         // Check if the condition expression returns a boolean
         if (!isValidConditionType(conditionType)) {
@@ -396,7 +403,7 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
 
     private Void visitMethodCallExpr(JmmNode expr, SymbolTable table) {
         // Get type
-        Type childType = getExprType(expr.getChild(0), table,currentMethod);
+        Type childType = getExprType(expr.getChild(0), table, currentMethod);
         String typeName = childType.getName();
 
         // Class is not super class, so it is import
@@ -421,11 +428,11 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
     private Void visitArrayInitExpr(JmmNode expr, SymbolTable table) {
         boolean validExpr = true;
 
-        Type arrayType = getExprType(expr, table,currentMethod);
+        Type arrayType = getExprType(expr, table, currentMethod);
 
         // Checks if values of array have different types
         for (JmmNode child : expr.getChildren()) {
-            Type childType = getExprType(child, table,currentMethod);
+            Type childType = getExprType(child, table, currentMethod);
             if (!Objects.equals(childType.getName(), arrayType.getName())) {
                 validExpr = false;
                 break;
@@ -447,11 +454,11 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
 
     private Void visitVarArgArray(JmmNode expr, SymbolTable table) {
         int varArgCounter = 0;
-        boolean found_var_arg =  false;
+        boolean found_var_arg = false;
         boolean error = false;
         for (JmmNode siblingExpr : expr.getParent().getChildren()) {
             String siblingKind = siblingExpr.getKind();
-            if (found_var_arg){
+            if (found_var_arg) {
                 error = true;
                 break;
             }
@@ -468,6 +475,30 @@ public class SemanticAnalyzer extends AnalysisVisitor  {
                     "Too many varargs",
                     null)
             );
+        }
+
+        return null;
+    }
+
+    private Void visitProgram(JmmNode expr, SymbolTable table) {
+        // Checks duplicated imports
+        List<String> imports = table.getImports();
+        for (String import1 : imports) {
+            int counter = 0;
+            for (String import2 : imports) {
+                if (Objects.equals(import1, import2)) {
+                    counter++;
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated imports",
+                            null)
+                    );
+                }
+            }
         }
 
         return null;
