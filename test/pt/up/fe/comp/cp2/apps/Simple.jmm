@@ -33,5 +33,9 @@
             return c;
         }
 
-
+        public int cringe(){
+            int c;
+            c = 1;
+            return c;
+        }
     }
