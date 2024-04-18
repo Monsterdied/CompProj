@@ -649,6 +649,50 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             }
         }
 
+        // Checks duplicated parameter
+        for (String methodName : table.getMethods()) {
+            List<Symbol> paramList = table.getParameters(methodName);
+            for (Symbol param1 : paramList) {
+                int counter = 0;
+                for (Symbol param2 : paramList) {
+                    if (Objects.equals(param1, param2)) {
+                        counter++;
+                    }
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated parameters",
+                            null)
+                    );
+                    return null;
+                }
+            }
+        }
+
+        // Checks duplicate methods
+        List<String> methodList = table.getMethods();
+        for (String method1 : methodList) {
+            int counter = 0;
+            for (String method2 : methodList) {
+                if (Objects.equals(method1, method2)) {
+                    counter++;
+                }
+            }
+            if (counter > 1) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(expr),
+                        NodeUtils.getColumn(expr),
+                        "Duplicated methods",
+                        null)
+                );
+                return null;
+            }
+        }
+
         return null;
     }
 }
