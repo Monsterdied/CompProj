@@ -1,10 +1,5 @@
 import io;
 class Simple {
-    public int cringe() {
-        int a;
-        a = 2;
-        return a;
-    }
 
     public int add(int a, int b){
         int c;

@@ -468,8 +468,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         if (!isValidConditionType(conditionType)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
-                    NodeUtils.getLine(conditionExpr),
-                    NodeUtils.getColumn(conditionExpr),
+                    NodeUtils.getLine(ifElseStmt),
+                    NodeUtils.getColumn(ifElseStmt),
                     "Expression in condition must return a boolean.",
                     null)
             );
