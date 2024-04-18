@@ -107,7 +107,7 @@ param
     ;
 
 stmt
-    : expr EQUALS expr SEMI #AssignStmt //
+    : expr EQUALS expr SEMI #AssignStmt
     | RETURN expr SEMI #ReturnStmt
     | expr SEMI #ExprStmt
     | LCURLY stmt* RCURLY #BlockStmt

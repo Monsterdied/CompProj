@@ -1,18 +1,19 @@
+import io;
+import java.util.List;
 import A;
+class Simple extends A{
 
-class B {
-
-    int foo(){
-    return 1;
+     public int arithmetic(){
+        int test;
+        test = A.test(A.testing());
+        test = A.foo();
+        return 10;
     }
 
-    int bar(){
-     B b;
-     A a;
-     boolean c;
-     b = new B();
-     c = a.foo();
-     return 0;
+
+
+    public static void main(String[] args){
     }
+
 
 }
