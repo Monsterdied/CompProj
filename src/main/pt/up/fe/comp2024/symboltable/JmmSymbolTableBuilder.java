@@ -116,7 +116,6 @@ public class JmmSymbolTableBuilder {
         }
         return map;
     }
-
     private static Map<String, List<Symbol>> buildLocals(JmmNode classDecl) {
         // TODO: Simple implementation that needs to be expanded
 
@@ -130,7 +129,6 @@ public class JmmSymbolTableBuilder {
         );
         return map;
     }
-
     private static List<String> buildMethods(JmmNode classDecl) {
         List<String> methods = new ArrayList <>();
         List<String> methods1 = classDecl.getChildren(METHOD_DECL).stream()
@@ -142,8 +140,6 @@ public class JmmSymbolTableBuilder {
         }
         return methods;
     }
-
-
     private static List<Symbol> getLocalsList(JmmNode methodDecl) {
         // TODO: Simple implementation that needs to be expanded
 

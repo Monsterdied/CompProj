@@ -27,6 +27,8 @@ GE : '>=' ;
 NOT: '!' ;
 VARAGS: '...' ;
 
+
+
 CLASS : 'class' ;
 INT : 'int' ;
 BOOLEAN : 'boolean' ;
@@ -40,6 +42,9 @@ WHILE : 'while' ;
 NEW : 'new' ;
 STATIC : 'static' ;
 VOID : 'void' ;
+
+ID : [a-zA-Z$_] [a-zA-Z0-9$_]*;
+
 MAIN : 'main' ;
 LENGTH : 'length' ;
 THIS : 'this' ;
@@ -47,7 +52,7 @@ THIS : 'this' ;
 INTEGER : '0' | [1-9] [0-9]*;
 BOOLEAN_VALUE : 'true' | 'false' ;
 
-ID : [a-zA-Z$_] [a-zA-Z0-9$_]*;
+
 
 COMMENT : '//' ~[\r\n]* -> skip ;
 MULTI_COMMENT : '/*' .*? '*/' -> skip ;

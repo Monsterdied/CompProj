@@ -1,0 +1,8 @@
+class length {
+
+    public int length() {
+        int length;
+        return length;
+    }
+
+}
