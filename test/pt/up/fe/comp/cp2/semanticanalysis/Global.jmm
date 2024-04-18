@@ -4,9 +4,8 @@ class IntPlusObject {
 
     public static void main(String[] args) {
         int a;
-        a = this.foo();
     }
-    public int foo(){
+    public void foo(){
         return 10;
     }
 }

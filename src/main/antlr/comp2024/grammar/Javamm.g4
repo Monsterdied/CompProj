@@ -86,6 +86,7 @@ type
     | name= INT
     | name= BOOLEAN
     | name= ID
+    | name= VOID
     | name= 'String';
 
 methodDecl locals[boolean isPublic=false]
