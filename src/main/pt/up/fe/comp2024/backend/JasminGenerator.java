@@ -113,26 +113,28 @@ public class JasminGenerator {
                     .append(field_to_jasmin(field.getFieldType()))
                     .append(NL);
         }
+        var code1 = new StringBuilder();
+        var code2 = new StringBuilder();
         for (var method : ollirResult.getOllirClass().getMethods()) {
 
             // Ignore constructor, since there is always one constructor
             // that receives no arguments, and has been already added
             // previously
             if (method.isConstructMethod()) {
-                code.append(".method public <init>()V").append(NL)
+                code1.append(".method public <init>()V").append(NL)
                         .append(TAB).append("aload_0").append(NL)
                         .append(TAB).append("invokespecial ").append(superClass).append("/<init>(");
                         for (var param : method.getParams()) {
-                            code.append(field_to_jasmin(param.getType()));
+                            code1.append(field_to_jasmin(param.getType()));
                         }
-                                code.append(")V").append(NL)
+                                code1.append(")V").append(NL)
                         .append(TAB).append("return").append(NL)
                         .append(".end method").append(NL);
                 continue;
             }
-            code.append(generators.apply(method));
+            code2.append(generators.apply(method));
         }
-        return code.toString();
+        return code.append(code1).append(code2).toString();
     }
     private String TypeToJasmin(Type type){
         switch (type.getTypeOfElement()){
@@ -145,9 +147,9 @@ public class JasminGenerator {
             case STRING:
                 return "Ljava/lang/String;";
             case OBJECTREF:
-                return getClass(((ClassType) type).getName());
+                return "L"+getClass(((ClassType) type).getName())+";";
             case THIS:
-                return getClass(((ClassType) type).getName());
+                return "L" + getClass(((ClassType) type).getName()) + ";";
             default:
                 return null;
         }
@@ -321,7 +323,8 @@ public class JasminGenerator {
         for (var arg : call.getArguments()) {
             code.append(generators.apply(arg));
         }
-        code.append("invokevirtual ").append(field_to_jasmin(call.getCaller().getType()));
+        var className= ((ClassType)call.getCaller().getType()).getName();
+        code.append("invokevirtual ").append(getClass(className));
         code.append("/").append(removeQuotes(((LiteralElement) call.getMethodName()).getLiteral()));
         code.append("(");
         for (var arg : call.getArguments()) {
@@ -355,7 +358,8 @@ public class JasminGenerator {
             code.append(generators.apply(arg));
         }
         //probably wrong
-        code.append("invokespecial ").append(field_to_jasmin(call.getCaller().getType())).append("/<init>(");
+        var className= ((ClassType)call.getCaller().getType()).getName();
+        code.append("invokespecial ").append(getClass(className)).append("/<init>(");
         for (var arg : call.getArguments()) {
             code.append(field_to_jasmin(arg.getType()));
         }
