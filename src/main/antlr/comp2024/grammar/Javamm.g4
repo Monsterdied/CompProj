@@ -36,7 +36,6 @@ RETURN : 'return' ;
 EXTENDS : 'extends' ;
 IF : 'if' ;
 ELSE : 'else' ;
-ELSEIF : 'else if' ;
 WHILE : 'while' ;
 NEW : 'new' ;
 STATIC : 'static' ;

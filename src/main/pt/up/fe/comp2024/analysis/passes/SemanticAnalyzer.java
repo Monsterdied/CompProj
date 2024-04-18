@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.analysis.passes;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -41,12 +42,80 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     private Void visitMainMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = "main";
         CurrentMethod = method;
+
+        // Checks for 0 or 1 return
+        int returnCounter = 0;
+        boolean hasReturn = false;
+        List<JmmNode> children = method.getChildren();
+        for (JmmNode child : children) {
+            if (Objects.equals(child.getKind(), "ReturnStmt")) {
+                if (!Objects.equals(child.getChild(0).get("name"), "ReturnStmt")) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(method),
+                            NodeUtils.getColumn(method),
+                            "Return inside main is not void",
+                            null)
+                    );
+                    return null;
+                }
+
+                hasReturn = true;
+                returnCounter++;
+            }
+        }
+
+        if (!(returnCounter == 0 || returnCounter == 1)) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Number of returns inside main function is not zero or one",
+                    null)
+            );
+            return null;
+        }
+
+        // Checks if last expression inside function is a return
+        if (hasReturn) {
+            if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(method),
+                        NodeUtils.getColumn(method),
+                        "Last expression inside function is not ReturnStmt",
+                        null)
+                );
+            }
+        }
+
         return null;
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
         CurrentMethod = method;
+
+        // Checks for only 1 return
+        int returnCounter = 0;
+        List<JmmNode> children = method.getChildren();
+        for (JmmNode child : children) {
+            if (Objects.equals(child.getKind(), "ReturnStmt")) {
+                returnCounter++;
+            }
+        }
+
+        if (returnCounter != 1) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Number of returns inside function is not one",
+                    null)
+            );
+            return null;
+        }
+
         Type type = table.getReturnType(currentMethod);
         var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
         Type returnType = getTypeFromExprSpeculation(retur, table);
@@ -69,27 +138,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
         }
 
-        // Checks for only 1 return
-        int returnCounter = 0;
-        List<JmmNode> children = method.getChildren();
-        for (JmmNode child : children) {
-            if (Objects.equals(child.getKind(), "ReturnStmt")) {
-                returnCounter++;
-            }
-        }
-
-        if (returnCounter != 1) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Number of returns inside function is not one",
-                    null)
-            );
-        }
-
         // Checks if last expression inside function is a return
-        /*if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+        if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(method),
@@ -97,8 +147,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                     "Last expression inside function is not ReturnStmt",
                     null)
             );
-        }*/
-
+        }
 
         return null;
     }
@@ -419,8 +468,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         if (!isValidConditionType(conditionType)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
-                    NodeUtils.getLine(conditionExpr),
-                    NodeUtils.getColumn(conditionExpr),
+                    NodeUtils.getLine(ifElseStmt),
+                    NodeUtils.getColumn(ifElseStmt),
                     "Expression in condition must return a boolean.",
                     null)
             );
@@ -530,6 +579,117 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                             null)
                     );
                 }
+            }
+        }
+
+        // Checks duplicated fields
+        List<Symbol> fields = table.getFields();
+        for (Symbol field1 : fields) {
+            int counter = 0;
+            for (Symbol field2 : fields) {
+                if (Objects.equals(field1, field2)) {
+                    counter++;
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated fields",
+                            null)
+                    );
+                    return null;
+                }
+            }
+        }
+
+        // Checks duplicated locals
+        for (String methodName : table.getMethods()) {
+            List<Symbol> localList = table.getLocalVariables(methodName);
+            for (Symbol local1 : localList) {
+                int counter = 0;
+                for (Symbol local2 : localList) {
+                    if (Objects.equals(local1, local2)) {
+                        counter++;
+                    }
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated locals",
+                            null)
+                    );
+                    return null;
+                }
+            }
+        }
+
+        // Checks duplicated parameter
+        for (String methodName : table.getMethods()) {
+            List<Symbol> paramList = table.getParameters(methodName);
+            for (Symbol param1 : paramList) {
+                int counter = 0;
+                for (Symbol param2 : paramList) {
+                    if (Objects.equals(param1, param2)) {
+                        counter++;
+                    }
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated parameters",
+                            null)
+                    );
+                    return null;
+                }
+            }
+        }
+
+        // Checks duplicated parameter
+        for (String methodName : table.getMethods()) {
+            List<Symbol> paramList = table.getParameters(methodName);
+            for (Symbol param1 : paramList) {
+                int counter = 0;
+                for (Symbol param2 : paramList) {
+                    if (Objects.equals(param1, param2)) {
+                        counter++;
+                    }
+                }
+                if (counter > 1) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(expr),
+                            NodeUtils.getColumn(expr),
+                            "Duplicated parameters",
+                            null)
+                    );
+                    return null;
+                }
+            }
+        }
+
+        // Checks duplicate methods
+        List<String> methodList = table.getMethods();
+        for (String method1 : methodList) {
+            int counter = 0;
+            for (String method2 : methodList) {
+                if (Objects.equals(method1, method2)) {
+                    counter++;
+                }
+            }
+            if (counter > 1) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(expr),
+                        NodeUtils.getColumn(expr),
+                        "Duplicated methods",
+                        null)
+                );
+                return null;
             }
         }
 
