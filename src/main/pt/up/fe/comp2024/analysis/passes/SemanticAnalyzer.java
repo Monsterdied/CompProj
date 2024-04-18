@@ -47,6 +47,27 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
         CurrentMethod = method;
+
+        // Checks for only 1 return
+        int returnCounter = 0;
+        List<JmmNode> children = method.getChildren();
+        for (JmmNode child : children) {
+            if (Objects.equals(child.getKind(), "ReturnStmt")) {
+                returnCounter++;
+            }
+        }
+
+        if (returnCounter != 1) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Number of returns inside function is not one",
+                    null)
+            );
+            return null;
+        }
+
         Type type = table.getReturnType(currentMethod);
         var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
         Type returnType = getTypeFromExprSpeculation(retur, table);
@@ -69,27 +90,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
         }
 
-        // Checks for only 1 return
-        int returnCounter = 0;
-        List<JmmNode> children = method.getChildren();
-        for (JmmNode child : children) {
-            if (Objects.equals(child.getKind(), "ReturnStmt")) {
-                returnCounter++;
-            }
-        }
-
-        if (returnCounter != 1) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Number of returns inside function is not one",
-                    null)
-            );
-        }
-
         // Checks if last expression inside function is a return
-        /*if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+        if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(method),
@@ -97,7 +99,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                     "Last expression inside function is not ReturnStmt",
                     null)
             );
-        }*/
+        }
 
 
         return null;
