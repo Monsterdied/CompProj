@@ -100,6 +100,19 @@ public class JasminGenerator {
         code.append(defaultConstructor);*/
 
         // generate code for all other methods
+        for (var field : classUnit.getFields()){
+            AccessModifier acces = field.getFieldAccessModifier();
+            String accesType = "";
+            switch (acces){
+                case DEFAULT -> accesType = "";
+                case PROTECTED -> accesType = "protected ";
+                case PUBLIC -> accesType = "public ";
+                case PRIVATE -> accesType = "private ";
+            }
+            code.append(".field ").append(accesType).append(field.getFieldName()).append(" ")
+                    .append(field_to_jasmin(field.getFieldType()))
+                    .append(NL);
+        }
         for (var method : ollirResult.getOllirClass().getMethods()) {
 
             // Ignore constructor, since there is always one constructor
