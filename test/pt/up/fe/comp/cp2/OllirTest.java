@@ -39,7 +39,7 @@ public class OllirTest {
 
     @Test
     public void compileGlobal() {
-        testJmmCompilation("pt/up/fe/comp/cp2/ollir/GlobalCompile.jmm", this::compileGlobal);
+            testJmmCompilation("pt/up/fe/comp/cp2/ollir/GlobalCompile.jmm", this::compileGlobal);
     }
 
     public static void testJmmCompilation(String resource, Consumer<ClassUnit> ollirTester, String executionOutput) {
