@@ -40,7 +40,6 @@ WHILE : 'while' ;
 NEW : 'new' ;
 STATIC : 'static' ;
 VOID : 'void' ;
-MAIN : 'main' ;
 THIS : 'this' ;
 
 INTEGER : '0' | [1-9] [0-9]*;
@@ -48,8 +47,10 @@ BOOLEAN_VALUE : 'true' | 'false' ;
 
 ID : [a-zA-Z$_] [a-zA-Z0-9$_]*;
 
+LENGTH:'length';
 
-LENGTH : 'length';
+
+
 
 COMMENT : '//' ~[\r\n]* -> skip ;
 MULTI_COMMENT : '/*' .*? '*/' -> skip ;
@@ -95,7 +96,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID MAIN LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID 'main' LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
@@ -136,12 +137,12 @@ expr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
+    | expr DOT 'length' #ArrayLengthExpr
     | op=NOT expr #NotExpr
     | value=INTEGER #IntegerLiteral
     | value=BOOLEAN_VALUE #BooleanLiteral
     | name=ID #VarRefExpr
     | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
-    | expr DOT LENGTH #ArrayLengthExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     ;
 

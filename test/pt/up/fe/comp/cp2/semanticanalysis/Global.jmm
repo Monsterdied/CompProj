@@ -1,8 +1,12 @@
-class length {
+import A;
 
-    public int length() {
-        int length;
-        return length;
+class IntPlusObject {
+
+    public static void main(String[] args) {
+        int a;
+        a = this.foo();
     }
-
+    public int foo(){
+        return 10;
+    }
 }

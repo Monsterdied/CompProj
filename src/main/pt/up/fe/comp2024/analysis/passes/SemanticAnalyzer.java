@@ -11,10 +11,10 @@ import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import pt.up.fe.comp2024.ast.Kind;
 
 import static pt.up.fe.comp2024.ast.TypeUtils.getExprType;
 
@@ -87,6 +87,16 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                         null)
                 );
             }
+        }
+
+        if(method.getDescendants("ThisExpr").size() > 0) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Found \"this\" keyword inside main method.",
+                    null)
+            );
         }
 
         return null;
