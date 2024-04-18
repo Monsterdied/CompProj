@@ -94,12 +94,21 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     computation.append(expr.getComputation());
 
                     if(arg.isInstance(METHOD_CALL_EXPR)){
+                        if(nodeMethodCall.getAncestor(ASSIGN_STMT).isPresent()){
+                            var variable = nodeMethodCall.getAncestor(ASSIGN_STMT).get().getChildren(VAR_REF_EXPR).get(0);
+                            Type resType = TypeUtils.getExprType(variable, table);
+                            String resOllirType = OptUtils.toOllirType(resType);
+                            String tempVar = OptUtils.getTemp() + resOllirType;
+                            computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
+                            code.append(tempVar);
+                        }else{
+                            Type resType = TypeUtils.getExprType(arg, table);
+                            String resOllirType = OptUtils.toOllirType(resType);
+                            String tempVar = OptUtils.getTemp() + resOllirType;
+                            computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
+                            code.append(tempVar);
+                        }
 
-                        Type resType = TypeUtils.getExprType(arg, table);
-                        String resOllirType = OptUtils.toOllirType(resType);
-                        String tempVar = OptUtils.getTemp() + resOllirType;
-                        computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
-                        code.append(tempVar);
 
                     }
                     else {
@@ -118,7 +127,11 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             return new OllirExprResult(code.toString(), computation);
         }
         if(isStatic){
-                code.append(").V").append(END_STMT);
+                if(nodeMethodCall.getAncestor(ASSIGN_STMT).isEmpty()){
+                    code.append(").V").append(END_STMT);
+                }else{
+                    code.append(").i32").append(END_STMT);
+                }
         }
         else{
             if(table.getMethods().contains(nodeMethodCall.get("name"))){

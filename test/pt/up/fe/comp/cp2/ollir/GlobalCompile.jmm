@@ -7,6 +7,9 @@ class Simple extends A{
         int test;
         test = A.test(A.testing());
         test = A.foo();
+
+        io.println(test);
+
         return 10;
     }
 
