@@ -89,22 +89,12 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             }
         }
 
-        if(!method.getDescendants("ThisExpr").isEmpty()) {
+        if(method.getDescendants("ThisExpr").size() > 0) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(method),
                     NodeUtils.getColumn(method),
                     "Found \"this\" keyword inside main method.",
-                    null)
-            );
-        }
-
-        if(!method.getDescendants("ReturnStmt").isEmpty()){
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Found a return statement inside main method.",
                     null)
             );
         }
@@ -125,7 +115,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             }
         }
 
-        /*
         if (returnCounter != 1) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -136,12 +125,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
             return null;
         }
-        */
-
-
-
-
-
 
         Type type = table.getReturnType(currentMethod);
         var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
