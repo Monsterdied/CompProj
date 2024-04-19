@@ -541,36 +541,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
         }
 
-        List<Symbol> expectedParams = table.getParameters(expr.get("name"));
-        if (expectedParams.size() > 0) {
-            JmmNode argsExpr = expr.getChild(1);
-            List<JmmNode> childrenExpr = argsExpr.getChildren();
-            if (childrenExpr.size() != expectedParams.size()) {
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(expr),
-                        NodeUtils.getColumn(expr),
-                        "Invalid number of arguments.",
-                        null)
-                );
-            } else {
-                for (int i = 0; i < childrenExpr.size(); i++) {
-                    Type argType = getExprType(childrenExpr.get(i), table, currentMethod);
-                    if (!argType.equals(expectedParams.get(i).getType())) {
-                        addReport(Report.newError(
-                                Stage.SEMANTIC,
-                                NodeUtils.getLine(expr),
-                                NodeUtils.getColumn(expr),
-                                "Invalid argument type.",
-                                null)
-                        );
-                    }
-                }
-            }
-
-        }
-
-
         return null;
     }
 
