@@ -1,0 +1,20 @@
+class Global {
+
+    public int add(int a, int b){
+        int c;
+        c = a + b;
+        return c;
+    }
+
+    public int cringe() {
+        int a;
+        int b;
+        int c;
+
+        a = 1;
+        b = 2;
+        c = this.add(a, b);
+
+        return c;
+    }
+}
