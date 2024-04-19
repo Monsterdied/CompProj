@@ -360,8 +360,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
 
     private Void visitArrayAccessExpr(JmmNode arrayAccessExpr, SymbolTable table) {
         // Check if array access is done over an array
-        JmmNode arrayExpr = arrayAccessExpr.getChildren().get(0);
-        Type arrayType = TypeUtils.getExprType(arrayExpr, table, currentMethod);
+        JmmNode arrayExpr = arrayAccessExpr.getChild(0);
+        Type arrayType = getExprType(arrayExpr, table, currentMethod);
 
         if (!arrayType.isArray()) {
             addReport(Report.newError(
@@ -374,8 +374,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         }
 
         // Check if array access index is an expression of type integer
-        JmmNode indexExpr = arrayAccessExpr.getChildren().get(1);
-        Type indexType = TypeUtils.getExprType(indexExpr, table, currentMethod);
+        JmmNode indexExpr = arrayAccessExpr.getChild(1);
+        Type indexType = getExprType(indexExpr, table, currentMethod);
 
         if (!indexType.getName().equals("int")) {
             addReport(Report.newError(
@@ -447,11 +447,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         // Get the condition expression
         JmmNode conditionExpr = ifElseStmt.getChildren().get(0);
 
-        // Get the type of the condition expression
-        Type conditionType = TypeUtils.getExprType(conditionExpr, table, currentMethod);
-
         // Check if the condition expression returns a boolean
-        if (!isValidConditionType(conditionType)) {
+        if (!isValidConditionExpr(conditionExpr, table)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(conditionExpr),
@@ -468,11 +465,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         // Get the condition expression
         JmmNode conditionExpr = ifElseStmt.getChildren().get(0);
 
-        // Get the type of the condition expression
-        Type conditionType = TypeUtils.getExprType(conditionExpr, table, currentMethod);
-
         // Check if the condition expression returns a boolean
-        if (!isValidConditionType(conditionType)) {
+        if (!isValidConditionExpr(conditionExpr, table)) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(ifElseStmt),
@@ -485,7 +479,9 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         return null;
     }
 
-    private Boolean isValidConditionType(Type conditionType) {
+    private Boolean isValidConditionExpr(JmmNode conditionExpr, SymbolTable table) {
+        Type conditionType = getExprType(conditionExpr, table, currentMethod);
+
         return conditionType.getName().equals("boolean");
     }
 
