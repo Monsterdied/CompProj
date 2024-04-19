@@ -541,10 +541,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         if (table.getParameters(expr.get("name")).isEmpty()) {
             return null;
         } else {
-            // Check if arguments are correct
-            List<JmmNode> arguments = expr.getDescendants("Args").get(0).getChildren();
-            List<Symbol> expectedParams = table.getParameters(expr.get("name"));
-
             // Checks if function is vararg
             List<JmmNode> functionsExpr = expr.getAncestor("ClassDecl").get().getDescendants("MethodDecl");
             for (JmmNode function : functionsExpr) {
@@ -558,6 +554,23 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                 }
             }
 
+            // Not vararg, check types and amount of arguments
+            List<JmmNode> arguments = expr.getDescendants("Args").get(0).getChildren();
+            List<Symbol> expectedParams = table.getParameters(expr.get("name"));
+
+            // Check if number of arguments is correct
+            if (arguments.size() != expectedParams.size()) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(expr),
+                        NodeUtils.getColumn(expr),
+                        "Invalid number of arguments.",
+                        null)
+                );
+                return null;
+            }
+
+            // Check if types of arguments are correct
             for (int i = 0; i < arguments.size(); i++) {
                 Type argType = getExprType(arguments.get(i), table, currentMethod);
                 Type expectedType = expectedParams.get(i).getType();
