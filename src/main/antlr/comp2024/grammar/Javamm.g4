@@ -62,7 +62,7 @@ importDecl
     ;
 
 classDecl
-    : CLASS name=(ID | 'length') (EXTENDS parent=ID)?
+    : CLASS name=(ID | 'length' |'main') (EXTENDS parent=ID)?
         LCURLY
         varDecl*
         methodDecl*
@@ -124,7 +124,7 @@ whileStmt
 
 expr
     : op=NOT expr #NotExpr
-    | expr '.' name=ID LPAREN args? RPAREN #MethodCallExpr
+    | expr '.' name=(ID|'main') LPAREN args? RPAREN #MethodCallExpr
     | name=ID LPAREN args? RPAREN #MethodCallExpr
     | expr op=(AND | OR) expr #BinaryExpr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
@@ -137,7 +137,7 @@ expr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     | value=BOOLEAN_VALUE #BooleanLiteral
     | NEW type LBRACK expr RBRACK #NewArrayExpr
-    | NEW name=ID LPAREN RPAREN #NewClassExpr
+    | NEW name=(ID|'main') LPAREN RPAREN #NewClassExpr
     | LBRACK (expr (',' expr)*)? RBRACK #ArrayInitExpression
     | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
     | THIS  #ThisExpr
