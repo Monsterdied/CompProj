@@ -51,8 +51,6 @@ ID : [a-zA-Z$_] [a-zA-Z0-9$_]*;
 
 
 
-
-
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
@@ -76,6 +74,7 @@ classDecl
 varDecl
     : type name=ID SEMI
     | type name='main' SEMI
+    | type name='length' SEMI
     ;
 
 type
@@ -94,7 +93,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID name='main' LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID name='main' LPAREN ('String' LBRACK RBRACK arg=(ID|'length'))? RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
@@ -102,7 +101,7 @@ paramList
     ;
 
 param
-    : type name=ID? #NormalParam
+    : type name=(ID|'length')? #NormalParam
     | type VARAGS name=ID? #VarArgArray
     ;
 
