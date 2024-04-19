@@ -1,10 +1,13 @@
 class Global {
 
-    public int foo() {
+    public int cringe() {
         int a;
-        a = b + 1;
-        return a;
-    }
+        int[] b;
 
+        a = 5;
+        b = [1, 2, 3];
+
+        return a + b[0];
+    }
 
 }
