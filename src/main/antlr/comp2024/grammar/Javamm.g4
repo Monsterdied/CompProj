@@ -4,6 +4,10 @@ grammar Javamm;
     package pt.up.fe.comp2024;
 }
 
+
+COMMENT : '//' ~[\r\n]* -> skip ;
+MULTI_COMMENT : '/*' .*? '*/' -> skip ;
+
 EQUALS : '=';
 SEMI : ';' ;
 LCURLY : '{' ;
@@ -12,8 +16,6 @@ LPAREN : '(' ;
 RPAREN : ')' ;
 LBRACK : '[' ;
 RBRACK : ']' ;
-COMMA : ',' ;
-DOT : '.' ;
 DIV : '/' ;
 MUL : '*' ;
 ADD : '+' ;
@@ -47,13 +49,6 @@ BOOLEAN_VALUE : 'true' | 'false' ;
 
 ID : [a-zA-Z$_] [a-zA-Z0-9$_]*;
 
-LENGTH:'length';
-
-
-
-
-COMMENT : '//' ~[\r\n]* -> skip ;
-MULTI_COMMENT : '/*' .*? '*/' -> skip ;
 
 
 WS : [ \t\n\r\f]+ -> skip ;
@@ -63,11 +58,11 @@ program
     ;
 
 importDecl
-    : IMPORT value+=ID (DOT value+=ID)* SEMI
+    : IMPORT value+=ID ('.' value+=ID)* SEMI
     ;
 
 classDecl
-    : CLASS name=ID (EXTENDS parent=ID)?
+    : CLASS name=(ID | 'length' |'main') (EXTENDS parent=ID)?
         LCURLY
         varDecl*
         methodDecl*
@@ -79,15 +74,16 @@ classDecl
 varDecl
     : type name=ID SEMI
     | type name='main' SEMI
+    | type name='length' SEMI
     ;
 
 type
     : type LBRACK RBRACK
     | name= INT
     | name= BOOLEAN
-    | name= ID
     | name= VOID
-    | name= 'String';
+    | name= 'String'
+    | name= (ID|'main');
 
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
@@ -97,15 +93,15 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID 'main' LPAREN ('String' LBRACK RBRACK arg=ID)? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID name='main' LPAREN ('String' LBRACK RBRACK arg=(ID|'length'|'main'))? RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
-    : (param (COMMA param)*)?
+    : (param (',' param)*)?
     ;
 
 param
-    : type name=ID? #NormalParam
+    : type name=(ID|'length'|'main')? #NormalParam
     | type VARAGS name=ID? #VarArgArray
     ;
 
@@ -127,28 +123,27 @@ whileStmt
     ;
 
 expr
-    : LPAREN expr RPAREN #ParenExpr
-    | THIS  #ThisExpr
-    | expr DOT name=ID LPAREN args? RPAREN #MethodCallExpr
+    : op=NOT expr #NotExpr
+    | expr '.' name=(ID|'main') LPAREN args? RPAREN #MethodCallExpr
     | name=ID LPAREN args? RPAREN #MethodCallExpr
-    | NEW type LBRACK expr RBRACK #NewArrayExpr
-    | NEW name=ID LPAREN RPAREN #NewClassExpr
-    | LBRACK (expr (COMMA expr)*)? RBRACK #ArrayInitExpression
     | expr op=(AND | OR) expr #BinaryExpr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
-    | expr DOT 'length' #ArrayLengthExpr
-    | op=NOT expr #NotExpr
     | value=INTEGER #IntegerLiteral
-    | value=BOOLEAN_VALUE #BooleanLiteral
-    | name=ID #VarRefExpr
-    | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
+    | name=(ID|'length'|'main') #VarRefExpr
+    | LPAREN expr RPAREN #ParenExpr
+    | expr '.' 'length' #ArrayLengthExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
+    | value=BOOLEAN_VALUE #BooleanLiteral
+    | NEW type LBRACK expr RBRACK #NewArrayExpr
+    | NEW name=(ID|'main') LPAREN RPAREN #NewClassExpr
+    | LBRACK (expr (',' expr)*)? RBRACK #ArrayInitExpression
+    | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
+    | THIS  #ThisExpr
     ;
 
 
 args
-    : expr (COMMA expr)*
+    : expr (',' expr)*
     ;
-

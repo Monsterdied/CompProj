@@ -269,37 +269,39 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         // Get the types of the left and right operands
         Type leftType = getExprType(leftOperand, table, currentMethod);
         Type rightType = getExprType(rightOperand, table, currentMethod);
-        if (leftType == null || rightType == null) {
+        if (leftType.getName() == null || rightType.getName() == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(binaryExpr),
                     NodeUtils.getColumn(binaryExpr),
-                    "Class Not imported",
+                    "Variable not defined",
                     null)
 
             );
-            return null;
         }
-        // Perform type compatibility check based on the operator
-        if (!isCompatible(operator, leftType, rightType)) {
-            String leftTypeName = leftType.print();
-            String rightTypeName = rightType.print();
+        else{
+            // Perform type compatibility check based on the operator
+            if (!isCompatible(operator, leftType, rightType)) {
+                String leftTypeName = leftType.print();
+                String rightTypeName = rightType.print();
 
-            String message;
-            if (leftType.isArray() || rightType.isArray()) {
-                message = "Array cannot be used in arithmetic operations.";
-            } else {
-                message = String.format("Incompatible types for operation '%s': %s and %s.", operator, leftTypeName, rightTypeName);
+                String message;
+                if (leftType.isArray() || rightType.isArray()) {
+                    message = "Array cannot be used in arithmetic operations.";
+                } else {
+                    message = String.format("Incompatible types for operation '%s': %s and %s.", operator, leftTypeName, rightTypeName);
+                }
+
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(binaryExpr),
+                        NodeUtils.getColumn(binaryExpr),
+                        message,
+                        null)
+                );
             }
-
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(binaryExpr),
-                    NodeUtils.getColumn(binaryExpr),
-                    message,
-                    null)
-            );
         }
+
 
 
         return null;
