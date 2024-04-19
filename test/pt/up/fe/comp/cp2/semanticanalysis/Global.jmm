@@ -1,12 +1,10 @@
-class Varargs {
+class Global {
 
     public int foo() {
         int a;
-        a = this.varargs(10, 20, 30);
+        a = b + 1;
         return a;
     }
 
-    public int varargs(int... a) {
-        return a[0];
-    }
+
 }

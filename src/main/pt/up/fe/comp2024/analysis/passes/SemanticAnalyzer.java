@@ -267,12 +267,12 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         // Get the types of the left and right operands
         Type leftType = getExprType(leftOperand, table, currentMethod);
         Type rightType = getExprType(rightOperand, table, currentMethod);
-        if (leftType == null || rightType == null) {
+        if (leftType.getName() == null || rightType.getName() == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(binaryExpr),
                     NodeUtils.getColumn(binaryExpr),
-                    "Class Not imported",
+                    "Variable not defined",
                     null)
 
             );
