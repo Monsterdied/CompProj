@@ -409,9 +409,9 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     }
 
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
-        // Get the left operand (the variable being assigned to) and check if it's a variable
+        // Get the left operand (the variable being assigned to) and check if it's a variable or array access
         JmmNode assignee = assignStmt.getChildren().get(0);
-        if (!Objects.equals(assignee.getKind(), "VarRefExpr")) {
+        if (!Objects.equals(assignee.getKind(), "VarRefExpr") && !Objects.equals(assignee.getKind(), "ArrayAccessExpr")) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(assignee),
