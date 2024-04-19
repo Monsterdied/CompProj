@@ -1,0 +1,9 @@
+import io;
+class Global{
+
+    int field;
+    public static void main(String[] args){
+        int a;
+        a = field;
+    }
+}

@@ -64,6 +64,20 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
         }
 
+        for(var variables: method.getDescendants(Kind.VAR_REF_EXPR)){
+           for(var field : table.getFields()){
+               if(field.getName().equals(variables.get("name"))){
+                   addReport(Report.newError(
+                           Stage.SEMANTIC,
+                           NodeUtils.getLine(method),
+                           NodeUtils.getColumn(method),
+                           "Cannot use field \"" + variables.get("name") + "\" inside a main decl.",
+                           null)
+                   );
+               }
+           }
+        }
+
         return null;
     }
 
