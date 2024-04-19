@@ -409,8 +409,18 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     }
 
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
-        // Get the left operand (the variable being assigned to)
+        // Get the left operand (the variable being assigned to) and check if it's a variable
         JmmNode assignee = assignStmt.getChildren().get(0);
+        if (!Objects.equals(assignee.getKind(), "VarRefExpr")) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(assignee),
+                    NodeUtils.getColumn(assignee),
+                    "Left operand of assignment is not a variable.",
+                    null)
+            );
+        }
+
         Type assigneeType = TypeUtils.getExprType(assignee, table, currentMethod);
 
         // Get the right operand (the value being assigned)
