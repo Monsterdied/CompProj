@@ -423,8 +423,18 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     }
 
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
-        // Get the left operand (the variable being assigned to)
+        // Get the left operand (the variable being assigned to) and check if it's a variable or array access
         JmmNode assignee = assignStmt.getChildren().get(0);
+        if (!(Objects.equals(assignee.getKind(), "VarRefExpr") || Objects.equals(assignee.getKind(), "ArrayAccessExpr"))) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(assignee),
+                    NodeUtils.getColumn(assignee),
+                    "Left operand of assignment is not a variable.",
+                    null)
+            );
+        }
+
         Type assigneeType = TypeUtils.getExprType(assignee, table, currentMethod);
 
         // Get the right operand (the value being assigned)
@@ -555,10 +565,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         if (table.getParameters(expr.get("name")).isEmpty()) {
             return null;
         } else {
-            // Check if arguments are correct
-            List<JmmNode> arguments = expr.getDescendants("Args").get(0).getChildren();
-            List<Symbol> expectedParams = table.getParameters(expr.get("name"));
-
             // Checks if function is vararg
             List<JmmNode> functionsExpr = expr.getAncestor("ClassDecl").get().getDescendants("MethodDecl");
             for (JmmNode function : functionsExpr) {
@@ -572,6 +578,23 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                 }
             }
 
+            // Not vararg, check types and amount of arguments
+            List<JmmNode> arguments = expr.getDescendants("Args").get(0).getChildren();
+            List<Symbol> expectedParams = table.getParameters(expr.get("name"));
+
+            // Check if number of arguments is correct
+            if (arguments.size() != expectedParams.size()) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(expr),
+                        NodeUtils.getColumn(expr),
+                        "Invalid number of arguments.",
+                        null)
+                );
+                return null;
+            }
+
+            // Check if types of arguments are correct
             for (int i = 0; i < arguments.size(); i++) {
                 Type argType = getExprType(arguments.get(i), table, currentMethod);
                 Type expectedType = expectedParams.get(i).getType();
