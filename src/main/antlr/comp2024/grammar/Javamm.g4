@@ -62,7 +62,7 @@ importDecl
     ;
 
 classDecl
-    : CLASS name=ID (EXTENDS parent=ID)?
+    : CLASS name=(ID | 'length') (EXTENDS parent=ID)?
         LCURLY
         varDecl*
         methodDecl*
@@ -83,7 +83,7 @@ type
     | name= BOOLEAN
     | name= VOID
     | name= 'String'
-    | name= ID;
+    | name= (ID|'main');
 
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
@@ -93,7 +93,7 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 mainMethodDecl
-    : PUBLIC? STATIC VOID name='main' LPAREN ('String' LBRACK RBRACK arg=(ID|'length'))? RPAREN LCURLY varDecl* stmt* RCURLY
+    : PUBLIC? STATIC VOID name='main' LPAREN ('String' LBRACK RBRACK arg=(ID|'length'|'main'))? RPAREN LCURLY varDecl* stmt* RCURLY
     ;
 
 paramList
@@ -101,7 +101,7 @@ paramList
     ;
 
 param
-    : type name=(ID|'length')? #NormalParam
+    : type name=(ID|'length'|'main')? #NormalParam
     | type VARAGS name=ID? #VarArgArray
     ;
 
@@ -131,7 +131,7 @@ expr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
     | value=INTEGER #IntegerLiteral
-    | name=(ID|'length') #VarRefExpr
+    | name=(ID|'length'|'main') #VarRefExpr
     | LPAREN expr RPAREN #ParenExpr
     | expr '.' 'length' #ArrayLengthExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
