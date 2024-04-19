@@ -416,6 +416,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         if (Objects.equals(table.getSuper(), assigneeType.getName()) && Objects.equals(table.getClassName(), valueType.getName())) {
             return null;
         }
+
         if (valueType == null || assigneeType == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -503,6 +504,11 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             return null;
         }
 
+        // Check if method is assumed in extends
+        if (Objects.equals(table.getClassName(), typeName) && !table.getSuper().isEmpty()) {
+            return null;
+        }
+
         // Method does not belong to super class
         if (!table.getMethods().contains(expr.get("name")) && table.getSuper().isEmpty()) {
             addReport(Report.newError(
@@ -512,6 +518,44 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                     "Invalid method call.",
                     null)
             );
+            return null;
+        }
+
+        // Check if method has arguments
+        if (table.getParameters(expr.get("name")).isEmpty()) {
+            return null;
+        } else {
+            // Check if arguments are correct
+            List<JmmNode> arguments = expr.getDescendants("Args").get(0).getChildren();
+            List<Symbol> expectedParams = table.getParameters(expr.get("name"));
+
+            // Checks if function is vararg
+            List<JmmNode> functionsExpr = expr.getAncestor("ClassDecl").get().getDescendants("MethodDecl");
+            for (JmmNode function : functionsExpr) {
+                if (Objects.equals(function.get("name"), expr.get("name"))) {
+                    JmmNode paramList = function.getDescendants("ParamList").get(0);
+                    if (!paramList.getDescendants("VarArgArray").isEmpty()) {
+                        // TODO: Check if arguments are correct
+                        return null;
+                    }
+                    break;
+                }
+            }
+
+            for (int i = 0; i < arguments.size(); i++) {
+                Type argType = getExprType(arguments.get(i), table, currentMethod);
+                Type expectedType = expectedParams.get(i).getType();
+                if (!argType.equals(expectedType)) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(arguments.get(i)),
+                            NodeUtils.getColumn(arguments.get(i)),
+                            "Invalid argument type.",
+                            null)
+                    );
+                    return null;
+                }
+            }
         }
 
         return null;
