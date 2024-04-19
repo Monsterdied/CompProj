@@ -48,11 +48,18 @@ public class TypeUtils {
             case VAR_ARG_ARRAY -> new Type(expr.getChild(0).get("name"), true);
             case PAREN_EXPR -> getExprType(expr.getJmmChild(0), table,currentMethod);
             case NOT_EXPR -> new Type(BOOLEAN_TYPE_NAME, false);
+            case ARRAY_LENGTH_EXPR -> getArrayLengthExpr(expr,table);
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
         };
 
         return type;
     }
+
+    private static Type getArrayLengthExpr(JmmNode expr, SymbolTable table) {
+        Type type = new Type(getExprType(expr.getChild(0),table).getName(), false);
+        return type;
+    }
+
     // TODO: Deal with method calls Its Bad delete all
     private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table) {
         var methodName = methodCall.get("name");

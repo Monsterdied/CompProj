@@ -31,6 +31,7 @@ public enum Kind {
     VAR_REF_EXPR,
     NEW_ARRAY_EXPR,
     ARRAY_INIT_EXPRESSION,
+    ARRAY_LENGTH_EXPR,
     VAR_ARG_ARRAY;
 
 

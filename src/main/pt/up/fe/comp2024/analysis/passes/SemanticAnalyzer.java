@@ -36,7 +36,21 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         addVisit("MethodCallExpr", this::visitMethodCallExpr);
         addVisit(Kind.ARRAY_INIT_EXPRESSION, this::visitArrayInitExpr);
         addVisit(Kind.VAR_ARG_ARRAY, this::visitVarArgArray);
+        addVisit(Kind.ARRAY_LENGTH_EXPR, this::visitArrayLengthExpr);
         addVisit(Kind.PROGRAM, this::visitProgram);
+    }
+
+    private Void visitArrayLengthExpr(JmmNode method, SymbolTable symbolTable) {
+        if(!method.getChild(0).isInstance(Kind.ARRAY_INIT_EXPRESSION)){
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Calling length on invalid type",
+                    null)
+            );
+        }
+        return null;
     }
 
     private Void visitMainMethodDecl(JmmNode method, SymbolTable table) {

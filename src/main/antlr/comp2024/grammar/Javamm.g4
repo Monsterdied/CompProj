@@ -139,7 +139,6 @@ expr
     | NEW type LBRACK expr RBRACK #NewArrayExpr
     | NEW name=(ID|'main') LPAREN RPAREN #NewClassExpr
     | LBRACK (expr (',' expr)*)? RBRACK #ArrayInitExpression
-    | LPAREN? ID RPAREN? (LBRACK expr RBRACK)+ #ArrayAccessExpr
     | THIS  #ThisExpr
     ;
 
