@@ -223,12 +223,26 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     }
 
     private Void visitVarRefExpr(JmmNode varRefExpr, SymbolTable table) {
-        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+
 
         // Check if variable reference exists in the symbol table
-        var varRefName = varRefExpr.get("name");
-        if (varRefExists(varRefName, table)) {
-            return null; // Variable reference exists, return
+        String varRefName = varRefExpr.get("name");
+
+
+        if (table.getFields().stream().anyMatch(field -> field.getName().equals(varRefName))) {
+            return null;
+        }
+
+        if (table.getParameters(currentMethod).stream().anyMatch(param -> param.getName().equals(varRefName))) {
+            return null;
+        }
+
+        if (table.getLocalVariables(currentMethod).stream().anyMatch(local -> local.getName().equals(varRefName))) {
+            return null;
+        }
+
+        if (table.getImports().contains(varRefName)) {
+            return null;
         }
 
         // Create error report
@@ -242,18 +256,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         );
 
         return null;
-    }
-
-    private boolean varRefExists(String varRefName, SymbolTable table) {
-        // Check if the variable reference exists in the symbol table
-        return table.getFields().stream()
-                .anyMatch(field -> field.getName().equals(varRefName)) ||  // Check if the variable reference is a field
-                table.getParameters(currentMethod).stream()
-                        .anyMatch(param -> param.getName().equals(varRefName)) || // Check if the variable reference is a parameter of the current method
-                table.getLocalVariables(currentMethod).stream()
-                        .anyMatch(varDecl -> varDecl.getName().equals(varRefName)) || // Check if the variable reference is a local variable of the current method
-                table.getImports().stream()
-                        .anyMatch(importName -> importName.equals(varRefName)); // Check if the variable reference is an import
     }
 
     private Void visitBinaryExpr(JmmNode binaryExpr, SymbolTable table) {

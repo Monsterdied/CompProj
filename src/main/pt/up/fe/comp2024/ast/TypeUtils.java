@@ -211,7 +211,8 @@ public class TypeUtils {
     }
 
     private static Type getArrayAccessExprType(JmmNode arrayAccessExpr, SymbolTable table,String currentMethod){
-        return getVarExprType(arrayAccessExpr.getJmmChild(0), table,currentMethod);
+        Type arrayType = getExprType(arrayAccessExpr.getJmmChild(0), table,currentMethod);
+        return new Type(arrayType.getName(), false);
     }
 
     private static Type getThisType(JmmNode binaryExpr,SymbolTable table) {
