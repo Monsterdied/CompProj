@@ -223,10 +223,11 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     }
 
     private Void visitVarRefExpr(JmmNode varRefExpr, SymbolTable table) {
-        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+
 
         // Check if variable reference exists in the symbol table
         String varRefName = varRefExpr.get("name");
+
 
         if (table.getFields().stream().anyMatch(field -> field.getName().equals(varRefName))) {
             return null;
