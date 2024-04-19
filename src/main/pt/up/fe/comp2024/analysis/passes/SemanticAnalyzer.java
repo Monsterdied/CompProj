@@ -75,9 +75,19 @@ public class SemanticAnalyzer extends AnalysisVisitor {
 
         List<JmmNode> returnStatements = method.getDescendants("ReturnStmt");
 
+        if(returnStatements.size() > 1){
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(method),
+                    NodeUtils.getColumn(method),
+                    "Method \"" + currentMethod + "\" has more than one return statement.",
+                    null)
+            );
+        }
+
         // Check if there are no return statements
         if (returnStatements.isEmpty()) {
-            if (!methodType.equals("w")) {
+            if (!methodType.getName().equals("void")) {
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         NodeUtils.getLine(method),
@@ -101,39 +111,33 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             }
         }
 
+        if(!methodType.getName().equals("void")) {
 
-        Type type = table.getReturnType(currentMethod);
-        var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
-        Type returnType = getTypeFromExprSpeculation(retur, table);
-        if (retur == null) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Return type of method does not match the declared return type.",
-                    null)
-            );
-        }
-        if (!type.equals(returnType)) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Return type of method does not match the declared return type.",
-                    null)
-            );
-        }
+            Type type = table.getReturnType(currentMethod);
+            var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
+            Type returnType = getTypeFromExprSpeculation(retur, table);
+            if (!type.equals(returnType)) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(method),
+                        NodeUtils.getColumn(method),
+                        "Return type of method does not match the declared return type.",
+                        null)
+                );
+            }
 
-        // Checks if last expression inside function is a return
-        var children = method.getChildren();
-        if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Last expression inside function is not ReturnStmt",
-                    null)
-            );
+            // Checks if last expression inside function is a return
+            var children = method.getChildren();
+            if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(method),
+                        NodeUtils.getColumn(method),
+                        "Last expression inside function is not ReturnStmt",
+                        null)
+                );
+            }
+
         }
 
         return null;

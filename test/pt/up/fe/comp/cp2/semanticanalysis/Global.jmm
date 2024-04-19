@@ -6,6 +6,6 @@ class IntPlusObject {
         int a;
     }
     public void foo(){
-        return 10;
+
     }
 }

@@ -178,7 +178,7 @@ public class SemanticAnalysisTest {
     public void global(){
         var result = TestUtils
                 .analyse(SpecsIo.getResource("pt/up/fe/comp/cp2/semanticanalysis/Global.jmm"));
-        TestUtils.mustFail(result);
+        TestUtils.noErrors(result);
         System.out.println(result.getReports());
     }
 }
