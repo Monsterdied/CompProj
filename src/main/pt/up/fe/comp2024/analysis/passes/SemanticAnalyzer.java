@@ -37,8 +37,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         addVisit(Kind.ARRAY_INIT_EXPRESSION, this::visitArrayInitExpr);
         addVisit(Kind.VAR_ARG_ARRAY, this::visitVarArgArray);
         addVisit(Kind.PROGRAM, this::visitProgram);
-        addVisit(Kind.RETURN_STMT, this::visitReturnStmt);
-        addVisit(Kind.EXPR_STMT, this::visitExprStmt);
     }
 
     private Void visitMainMethodDecl(JmmNode method, SymbolTable table) {
@@ -444,7 +442,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
 
         //Check if variables are defined
         var rightNode = assignStmt.getChildren().get(1);
-        checkUndefinedVariables(rightNode,table);
+        //checkUndefinedVariables(rightNode,table);
 
 
 
@@ -737,76 +735,5 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         return null;
     }
 
-    private Void visitReturnStmt(JmmNode expr, SymbolTable table) {
-        //check if variables are defined
-        var returnStmt = expr.getChildren().get(0);
-        checkUndefinedVariables(returnStmt,table);
-        return null;
-
-    }
-
-    private Void visitExprStmt(JmmNode expr, SymbolTable table) {
-        //check if variables are defined
-        var exprstmt = expr.getChildren().get(0);
-        checkUndefinedVariables(exprstmt,table);
-        return null;
-    }
-
-    private Void checkUndefinedVariables(JmmNode expr, SymbolTable table) {
-        if(expr.isInstance("VarRefExpr")){
-            if(!isVariableDefined(expr,table)){
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(expr),
-                        NodeUtils.getColumn(expr),
-                        "Variable " + expr.get("name") + " is not defined.",
-                        null)
-                );
-            }
-        }else{
-            for(var variables :  expr.getDescendants("VarRefExpr")){
-                if(!isVariableDefined(variables,table)){
-                    addReport(Report.newError(
-                            Stage.SEMANTIC,
-                            NodeUtils.getLine(expr),
-                            NodeUtils.getColumn(expr),
-                            "Variable " + variables.get("name") + " is not defined.",
-                            null)
-                    );
-                }
-            }
-        }
-        return null;
-    }
-    
-    private Boolean isVariableDefined(JmmNode variable, SymbolTable table) {
-        JmmNode methodNode;
-        String methodNameNode;
-        if(variable.getAncestor("MainMethodDecl").isPresent()){
-            methodNode = variable.getAncestor("MainMethodDecl").get();
-            methodNameNode = "main";
-        }else{
-            methodNode = variable.getAncestor("MethodDecl").get();
-            methodNameNode = variable.getAncestor("MethodDecl").get().get("name");
-        }
-        for(var stmt: methodNode.getChildren()){
-            if(stmt.isInstance("AssignStmt")){
-                JmmNode assignee = stmt.getChild(0);
-                if(assignee.get("name").equals(variable.get("name"))){
-                    return true;
-                }
-            }
-        }
-        for(var param : table.getParameters(methodNameNode)){
-            if(param.getName().equals(variable.get("name"))){
-                return true;
-            }
-        }
-        for(var imports : table.getImports()) {
-            if(imports.contains(variable.get("name"))){
-                return true;
-            }
-        }
-        return false;
-    }
 }
+
