@@ -131,7 +131,7 @@ expr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
     | value=INTEGER #IntegerLiteral
-    | name=ID #VarRefExpr
+    | name=(ID|'length') #VarRefExpr
     | LPAREN expr RPAREN #ParenExpr
     | expr '.' 'length' #ArrayLengthExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
