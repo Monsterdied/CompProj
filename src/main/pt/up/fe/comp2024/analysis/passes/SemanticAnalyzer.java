@@ -43,50 +43,15 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         currentMethod = "main";
         CurrentMethod = method;
 
-        // Checks for 0 or 1 return
-        int returnCounter = 0;
-        boolean hasReturn = false;
-        List<JmmNode> children = method.getChildren();
-        for (JmmNode child : children) {
-            if (Objects.equals(child.getKind(), "ReturnStmt")) {
-                if (!Objects.equals(child.getChild(0).get("name"), "ReturnStmt")) {
-                    addReport(Report.newError(
-                            Stage.SEMANTIC,
-                            NodeUtils.getLine(method),
-                            NodeUtils.getColumn(method),
-                            "Return inside main is not void",
-                            null)
-                    );
-                    return null;
-                }
-
-                hasReturn = true;
-                returnCounter++;
-            }
-        }
-
-        if (!(returnCounter == 0 || returnCounter == 1)) {
+        // Checks for no returns
+        if(!method.getDescendants("ReturnStmt").isEmpty()){
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(method),
                     NodeUtils.getColumn(method),
-                    "Number of returns inside main function is not zero or one",
+                    "Found a return statement inside main method declaration.",
                     null)
             );
-            return null;
-        }
-
-        // Checks if last expression inside function is a return
-        if (hasReturn) {
-            if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(method),
-                        NodeUtils.getColumn(method),
-                        "Last expression inside function is not ReturnStmt",
-                        null)
-                );
-            }
         }
 
         if(method.getDescendants("ThisExpr").size() > 0) {
@@ -106,25 +71,36 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         currentMethod = method.get("name");
         CurrentMethod = method;
 
-        // Checks for only 1 return
-        int returnCounter = 0;
-        List<JmmNode> children = method.getChildren();
-        for (JmmNode child : children) {
-            if (Objects.equals(child.getKind(), "ReturnStmt")) {
-                returnCounter++;
+        var methodType = table.getReturnType(currentMethod);
+
+        List<JmmNode> returnStatements = method.getDescendants("ReturnStmt");
+
+        // Check if there are no return statements
+        if (returnStatements.isEmpty()) {
+            if (!methodType.equals("w")) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(method),
+                        NodeUtils.getColumn(method),
+                        "Method must have a return type of void since it has no return statements.",
+                        null)
+                );
+            }
+        } else {
+            // Check if the return type matches the method's declared return type
+            JmmNode ReturnStatement = returnStatements.get(0);
+            Type returnType = TypeUtils.getExprType(ReturnStatement.getChild(0), table);
+            if (!methodType.equals(returnType)) {
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        NodeUtils.getLine(ReturnStatement),
+                        NodeUtils.getColumn(ReturnStatement),
+                        "Return type of method does not match the declared return type.",
+                        null)
+                );
             }
         }
 
-        if (returnCounter != 1) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(method),
-                    NodeUtils.getColumn(method),
-                    "Number of returns inside function is not one",
-                    null)
-            );
-            return null;
-        }
 
         Type type = table.getReturnType(currentMethod);
         var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
@@ -149,6 +125,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         }
 
         // Checks if last expression inside function is a return
+        var children = method.getChildren();
         if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
             addReport(Report.newError(
                     Stage.SEMANTIC,

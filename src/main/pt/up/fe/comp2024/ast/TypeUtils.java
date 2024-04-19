@@ -114,7 +114,7 @@ public class TypeUtils {
         Type type = switch (kind) {
             case BINARY_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr, table);
-            case ARRAY_ACCESS_EXPR -> getVarExprType(expr.getJmmChild(0), table);
+            case ARRAY_ACCESS_EXPR -> new Type(getVarExprType(expr.getJmmChild(0), table).getName(), false);
             case METHOD_CALL_EXPR -> table.getReturnType(expr.get("name"));
             case INTEGER_LITERAL -> new Type(INT_TYPE_NAME, false);
             case BOOLEAN_LITERAL -> new Type(BOOLEAN_TYPE_NAME, false);
