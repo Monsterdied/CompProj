@@ -64,6 +64,22 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
         }
 
+        // Check that no variables are fields
+        List<JmmNode> varRefExprs = method.getDescendants("VarRefExpr");
+        for (JmmNode varRefExpr : varRefExprs) {
+            for (Symbol field : table.getFields()) {
+                if (field.getName().equals(varRefExpr.get("name"))) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(varRefExpr),
+                            NodeUtils.getColumn(varRefExpr),
+                            "Variable \"" + varRefExpr.get("name") + "\" is a field.",
+                            null)
+                    );
+                }
+            }
+        }
+
         return null;
     }
 
