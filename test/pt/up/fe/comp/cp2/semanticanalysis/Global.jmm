@@ -1,9 +1,20 @@
-import io;
-class Global{
+class Global {
 
-    int field;
-    public static void main(String[] args){
+    public int add(int a, int b){
+        int c;
+        c = a + b;
+        return c;
+    }
+
+    public int cringe() {
         int a;
-        a = field;
+        int b;
+        int c;
+
+        a = 1;
+        b = 2;
+        c = this.add(a, b);
+
+        return c;
     }
 }
