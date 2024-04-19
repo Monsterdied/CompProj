@@ -112,31 +112,35 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         }
 
         if(!methodType.getName().equals("void")) {
+            var retur = method.getChildren(Kind.RETURN_STMT);
 
-            Type type = table.getReturnType(currentMethod);
-            var retur = method.getChildren(Kind.RETURN_STMT).get(0).getChildren().get(0);
-            Type returnType = getTypeFromExprSpeculation(retur, table);
-            if (!type.equals(returnType)) {
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(method),
-                        NodeUtils.getColumn(method),
-                        "Return type of method does not match the declared return type.",
-                        null)
-                );
+            if(retur.size() == 1) {
+                Type type = table.getReturnType(currentMethod);
+
+                Type returnType = getTypeFromExprSpeculation(retur.get(0).getChildren().get(0), table);
+                if (!type.equals(returnType)) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(method),
+                            NodeUtils.getColumn(method),
+                            "Return type of method does not match the declared return type.",
+                            null)
+                    );
+                }
+
+                // Checks if last expression inside function is a return
+                var children = method.getChildren();
+                if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(method),
+                            NodeUtils.getColumn(method),
+                            "Last expression inside function is not ReturnStmt",
+                            null)
+                    );
+                }
             }
 
-            // Checks if last expression inside function is a return
-            var children = method.getChildren();
-            if (!Objects.equals(children.get(children.size() - 1).getKind(), "ReturnStmt")) {
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(method),
-                        NodeUtils.getColumn(method),
-                        "Last expression inside function is not ReturnStmt",
-                        null)
-                );
-            }
 
         }
 

@@ -5,7 +5,7 @@ class IntPlusObject {
     public static void main(String[] args) {
         int a;
     }
-    public void foo(){
-
+    public int foo(){
+       int a;
     }
 }
