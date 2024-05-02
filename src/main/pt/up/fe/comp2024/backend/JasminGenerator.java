@@ -37,6 +37,7 @@ public class JasminGenerator {
 
     Method currentMethod;
     //Map<String,Descriptor> varTable = new HashMap<>();
+    ClassUnit currentClass;
 
     private final FunctionClassMap<TreeNode, String> generators;
 
@@ -77,7 +78,7 @@ public class JasminGenerator {
 
 
     private String generateClassUnit(ClassUnit classUnit) {
-
+        currentClass = classUnit;
         var code = new StringBuilder();
         // generate class name
         var className = ollirResult.getOllirClass().getClassName();
@@ -190,9 +191,9 @@ public class JasminGenerator {
     private String getClass(String className){
 
         if (className.equals("this")){
-            return currentMethod.getOllirClass().getClassName();
+            return currentClass.getClassName();
         }
-        for (String name : currentMethod.getOllirClass().getImports()){
+        for (String name : currentClass.getImports()){
             if (name.endsWith(className)){
                 return name;
             }
