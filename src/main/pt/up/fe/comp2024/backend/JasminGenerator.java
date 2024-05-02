@@ -195,7 +195,8 @@ public class JasminGenerator {
         }
         for (String name : currentClass.getImports()){
             if (name.endsWith(className)){
-                return name;
+                var result = name.replace(".","/");
+                return result;
             }
         }
         return className;
