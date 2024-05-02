@@ -94,11 +94,13 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     computation.append(expr.getComputation());
 
                     if(arg.isInstance(METHOD_CALL_EXPR)){
+
                         Type resType = TypeUtils.getExprType(arg, table);
                         String resOllirType = OptUtils.toOllirType(resType);
                         String tempVar = OptUtils.getTemp() + resOllirType;
                         computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode());
                         code.append(tempVar);
+
                     }
                     else {
                         code.append(expr.getCode());
@@ -116,7 +118,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             return new OllirExprResult(code.toString(), computation);
         }
         if(isStatic){
-            code.append(").V").append(END_STMT);
+                code.append(").V").append(END_STMT);
         }
         else{
             if(table.getMethods().contains(nodeMethodCall.get("name"))){
@@ -140,7 +142,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var resOllirType = node.get("name");
         var tempVar = OptUtils.getTemp() + "." +resOllirType;
         computation.append(tempVar).append(SPACE).append(ASSIGN).append(".").append(resOllirType).append(SPACE).append("new(").append(resOllirType).append(")").append(".").append(resOllirType).append(END_STMT);
-        computation.append(String.format("invokespecial(%s, \"\").V", tempVar)).append(END_STMT);
+        computation.append(String.format("invokespecial(%s, \"<init>\").V", tempVar)).append(END_STMT);
         code.append(tempVar);
         return new OllirExprResult(code.toString(),computation.toString());
     }

@@ -1,0 +1,9 @@
+class ArrayInit {
+
+    public int[] foo() {
+        int[] a;
+        a[4] = 3.length;
+        return a;
+    }
+
+}
