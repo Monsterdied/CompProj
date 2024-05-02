@@ -224,7 +224,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-        //TODO: ASK ABOUT METHOD CALL TYPES IN OPERATIONS AND TMPS
         StringBuilder code = new StringBuilder();
         var lhs_node = node.getJmmChild(0);
         var rhs_node = node.getJmmChild(1);
