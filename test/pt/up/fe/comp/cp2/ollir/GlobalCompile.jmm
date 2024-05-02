@@ -1,29 +1,19 @@
-import Auxi;
-import io;
+import okidokig.ilikeit.io;
+class Test {
 
-class InvokeImportMixed {
+    int intField;
+    io likeit;
 
     public static void main(String[] args) {
-        InvokeImportMixed a;
-        Auxi x;
-        int res;
-
-        a = new InvokeImportMixed();
-        x = new Auxi();
-
-        res = a.foo(x);
-        io.println(res);
     }
 
-    public int foo(Auxi d) {
+
+    public int foo() {
         int a;
-        a = 0;
+        a = intField;
 
-        Auxi.staticCall(a);
-
-        d.instanceCallVoid();
-        a = d.instanceCallInt();
-
+        intField = 10;
+        io.eat();
         return a;
     }
 }

@@ -160,7 +160,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         for (var field : table.getFields()) {
             if (field.getName().equals(node.get("name"))) {
-                if(node.getParent().getKind().equals("AssignStmt")  ){
+                var left_side = node.getAncestor("AssignStmt").get().getChild(0);
+                if( left_side.equals(node)){
                     String name = node.get("name");
                     String type = OptUtils.toOllirType(field.getType().getName());
                     var computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
