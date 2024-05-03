@@ -295,8 +295,8 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         JmmNode rightOperand = binaryExpr.getChildren().get(1);
 
         // Get the types of the left and right operands
-        Type leftType = getExprType(leftOperand, table, currentMethod);
-        Type rightType = getExprType(rightOperand, table, currentMethod);
+        Type leftType = getExprType(leftOperand, table);
+        Type rightType = getExprType(rightOperand, table);
         if (leftType.getName() == null || rightType.getName() == null) {
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -393,7 +393,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     private Void visitArrayAccessExpr(JmmNode arrayAccessExpr, SymbolTable table) {
         // Check if array access is done over an array
         JmmNode arrayExpr = arrayAccessExpr.getChild(0);
-        Type arrayType = getExprType(arrayExpr, table, currentMethod);
+        Type arrayType = getExprType(arrayExpr, table);
 
         if (!arrayType.isArray()) {
             addReport(Report.newError(
@@ -407,7 +407,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
 
         // Check if array access index is an expression of type integer
         JmmNode indexExpr = arrayAccessExpr.getChild(1);
-        Type indexType = getExprType(indexExpr, table, currentMethod);
+        Type indexType = getExprType(indexExpr, table);
 
         if (!indexType.getName().equals("int")) {
             addReport(Report.newError(
@@ -435,14 +435,14 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             );
         }
 
-        Type assigneeType = TypeUtils.getExprType(assignee, table, currentMethod);
+        Type assigneeType = TypeUtils.getExprType(assignee, table);
 
         // Get the right operand (the value being assigned)
         JmmNode valueExpr = assignStmt.getChildren().get(1);
-        Type valueType = TypeUtils.getExprType(valueExpr, table, currentMethod);
+        Type valueType = TypeUtils.getExprType(valueExpr, table);
 
         if (valueType != null) {
-            if (valueType.getName() == null) { // Function is imported
+            if (valueType.getName() == "void") { // Function is imported
                 return null;
             }
         }
@@ -529,14 +529,14 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     }
 
     private Boolean isValidConditionExpr(JmmNode conditionExpr, SymbolTable table) {
-        Type conditionType = getExprType(conditionExpr, table, currentMethod);
+        Type conditionType = getExprType(conditionExpr, table);
 
         return conditionType.getName().equals("boolean");
     }
 
     private Void visitMethodCallExpr(JmmNode expr, SymbolTable table) {
         // Get type
-        Type childType = getExprType(expr.getChild(0), table, currentMethod);
+        Type childType = getExprType(expr.getChild(0), table);
         String typeName = childType.getName();
 
         // Class is not super class, so it is import
@@ -596,7 +596,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
 
             // Check if types of arguments are correct
             for (int i = 0; i < arguments.size(); i++) {
-                Type argType = getExprType(arguments.get(i), table, currentMethod);
+                Type argType = getExprType(arguments.get(i), table);
                 Type expectedType = expectedParams.get(i).getType();
                 if (!argType.equals(expectedType)) {
                     addReport(Report.newError(
@@ -617,11 +617,11 @@ public class SemanticAnalyzer extends AnalysisVisitor {
     private Void visitArrayInitExpr(JmmNode expr, SymbolTable table) {
         boolean validExpr = true;
 
-        Type arrayType = getExprType(expr, table, currentMethod);
+        Type arrayType = getExprType(expr, table);
 
         // Checks if values of array have different types
         for (JmmNode child : expr.getChildren()) {
-            Type childType = getExprType(child, table, currentMethod);
+            Type childType = getExprType(child, table);
             if (!Objects.equals(childType.getName(), arrayType.getName())) {
                 validExpr = false;
                 break;

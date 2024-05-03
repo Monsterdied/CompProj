@@ -1,8 +1,10 @@
 class ArrayInit {
 
-    public int[] foo() {
-        int[] a;
-        a[4] = 3.length;
+    int a;
+
+    public bool foo() {
+        bool a;
+        a = true;
         return a;
     }
 
