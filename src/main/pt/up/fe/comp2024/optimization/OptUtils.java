@@ -48,7 +48,7 @@ public class OptUtils {
 
         String type = switch (typeName) {
             case "int" -> ".i32";
-            case "bool" -> ".bool";
+            case "boolean" -> ".bool";
             case "void" -> ".V";
             case "import" -> "";
             default -> "." + typeName;
