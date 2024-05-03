@@ -55,51 +55,10 @@ public class TypeUtils {
 
         return type;
     }
-    
+
     private static Type getArrayLengthExpr(JmmNode expr, SymbolTable table) {
         Type type = new Type(getExprType(expr.getChild(0),table).getName(), false);
         return type;
-    }
-
-    private static Type dealWithMethodCall(JmmNode methodCall, SymbolTable table) {
-        var methodName = methodCall.get("name");
-        if (!methodCall.getChildren().isEmpty()) {
-            for (var imported : table.getImports()) {
-                if (imported.endsWith(methodName)) {
-                    return new Type(methodName, false);
-                }
-            }
-            if (Objects.equals(methodCall.getChild(0).getKind(), "VarRefExpr")) { // might be imported function
-                Type importedClassType = getVarExprType(methodCall.getChild(0), table);
-                if (table.getImports().contains(importedClassType.getName())) {
-                    return new Type(null, false);
-                }
-            }
-            if (table.getMethods().contains(methodName)) {
-                // Get class expression
-                JmmNode parentExpr = methodCall.getParent();
-                while (!Objects.equals(parentExpr.getKind(), "ClassDecl")) {
-                    parentExpr = parentExpr.getParent();
-                }
-
-                // Get methods and check type
-                for (JmmNode siblingExpr : parentExpr.getChildren()) {
-                    if (!Objects.equals(siblingExpr.getKind(), "MainMethodDecl")) { // Doesn't check main decl
-                        if (Objects.equals(siblingExpr.get("name"), methodName)) {
-                            JmmNode methodTypeExpr = siblingExpr.getChild(0);
-                            if (methodTypeExpr.getChildren().isEmpty()) { // Method returns value
-                                return new Type(siblingExpr.getChild(0).get("name"), false);
-                            } else { // Method returns array
-                                return new Type(siblingExpr.getChild(0).getChild(0).get("name"), true);
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            return table.getReturnType(methodName);
-        }
-        return null;
     }
 
     private static Type getBinExprType(JmmNode binaryExpr) {
@@ -114,8 +73,6 @@ public class TypeUtils {
                     throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
         };
     }
-
-
 
     private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
 
@@ -166,34 +123,6 @@ public class TypeUtils {
             }
         }
         return type;
-    }
-
-    private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table,String currentMethod){
-
-        var imports= table.getImports();
-        String name=varRefExpr.get("name");
-        for(String a : imports){
-            if(a.endsWith(name)){
-                return new Type(name, false);
-            }
-        }
-
-        for (var symbol : table.getFields()) {
-            if (symbol.getName().equals(varRefExpr.get("name"))) {
-                return symbol.getType();
-            }
-        }
-        for(var param : table.getParameters(currentMethod)){
-            if(param.getName().equals(varRefExpr.get("name"))){
-                return param.getType();
-            }
-        }
-        for (var local : table.getLocalVariables(currentMethod)) {
-            if (local.getName().equals(varRefExpr.get("name"))) {
-                return local.getType();
-            }
-        }
-        return new Type(null, false);
     }
 
     private static Type getArrayAccessExprType(JmmNode arrayAccessExpr, SymbolTable table){

@@ -145,7 +145,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             if(retur.size() == 1) {
                 Type type = table.getReturnType(currentMethod);
 
-                Type returnType = getTypeFromExprSpeculation(retur.get(0).getChildren().get(0), table);
+                Type returnType = getExprType(retur.get(0).getChildren().get(0), table);
                 if (!type.equals(returnType)) {
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -200,53 +200,6 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                 return local.getType();
             }
         }
-        return new Type(null, false);
-    }
-
-    //this method just gives the expected from a given expression carefull
-    private Type getTypeFromExprSpeculation(JmmNode expr, SymbolTable table) {
-        switch (expr.getKind()) {
-            case "ThisExpr":
-                return new Type("int", false);
-            case "VarRefExpr":
-                return getVarExprType(expr, table);
-            case "NewArrayExpr":
-                return new Type("int", true);
-            case "NotExpr":
-                return new Type("boolean", false);
-            case "IntegerLiteral":
-                return new Type("int", false);
-            case "BooleanLiteral":
-                return new Type("boolean", false);
-            case "BinaryExpr":
-                var op = expr.get("op");
-
-                if (op == "&&" || op == "||" || op == "<" || op == ">" || op == "<=" || op == ">=") {
-                    return new Type("boolean", false);
-                }
-                if (op == "+" || op == "-" || op == "*" || op == "/") {
-                    return new Type("int", false);
-                }
-                break;
-            case "ArrayAccessExpr":
-                return new Type("int", false);
-            case "MethodCallExpr":
-                var tmp = table.getReturnType(expr.get("name"));
-                if (tmp == null) {
-                    return new Type("null", false);
-                }
-                return tmp;
-            case "ArrayInitExpression":
-                return new Type("int", true);
-            case "NewClassExpr":
-                return new Type(expr.get("name"), false);
-
-
-            default:
-                break;
-            // code block
-        }
-
         return new Type(null, false);
     }
 
