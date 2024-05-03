@@ -149,6 +149,7 @@ public class JmmSymbolTableBuilder {
                     .forEach(var -> {
                         var type = new Type(null,false);
                         if(var.getChildren(TYPE).get(0).getChildren().size() == 0){
+
                             type = new Type(var.getChildren("Type").get(0).get("name"),false);
                         }
                         else{

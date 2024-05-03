@@ -2,8 +2,8 @@ class ArrayInit {
 
     int a;
 
-    public bool foo() {
-        bool a;
+    public boolean foo() {
+        boolean a;
         a = true;
         return a;
     }
