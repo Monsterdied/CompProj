@@ -84,7 +84,9 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                 JmmNode arg = args_nodes.get(i);
                 //Variable Case
                 if (arg.isInstance(VAR_REF_EXPR)) {
-                    arg_type = visit(arg).getCode();
+                    var result = visit(arg);
+                    arg_type = result.getCode();
+                    computation.append(result.getComputation());
                     code.append(arg_type);
                 }
                 //Other case
