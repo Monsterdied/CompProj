@@ -158,26 +158,76 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             return new OllirExprResult(code);
         }
 
-        for (var field : table.getFields()) {
-            if (field.getName().equals(node.get("name"))) {
-                if(node.getParent().getKind().equals("AssignStmt")  ){
-                    String name = node.get("name");
-                    String type = OptUtils.toOllirType(field.getType().getName());
-                    var computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
-                    code = String.format("putfield(this, %s, %s).V;", name + type, computation.getCode());
-                    return new OllirExprResult(computation.getComputation(),code);
-                }
-                else{
-                    Type fieldType = TypeUtils.getExprType(node, table);
-                    String fieldOllirType = OptUtils.toOllirType(fieldType);
-                    String tempVar = OptUtils.getTemp() + fieldOllirType;
-                    String fieldName = node.get("name");
+        //Check if local or param
+        var scope = "";
+        String idscope = node.get("name");
+        List<Symbol> parent = null;
+        if(node.getAncestor(MAIN_METHOD_DECL).isPresent()){
+            parent = table.getLocalVariables("main");
+        }
+        else{
+            parent = table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+        }
 
-                    code = tempVar + SPACE + ASSIGN + fieldOllirType + SPACE + String.format("getfield(this, %s)", fieldName+fieldOllirType) + fieldOllirType + END_STMT;
-                    return new OllirExprResult(tempVar, code);
+        //Variavel Local
+        for(var locals: parent){
+            if(locals.getName().equals(idscope)){
+                scope = "local";
+                break;
+            }
+        }
+        if(scope.isEmpty()){
+            //Variavel Param
+            if(!node.getAncestor(MAIN_METHOD_DECL).isPresent()) {
+                var parent_param = table.getParameters(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+                for (var param : parent_param) {
+                    if (param.getName().equals(idscope)) {
+                        scope = "param";
+                        break;
+                    }
+                }
+            }
+            if(scope.isEmpty()){
+                //Variavel Field
+                for(var field: table.getFields()) {
+                    if(field.getName().equals(idscope)){
+                        scope = "field";
+                        break;
+                    }
+                }
+                if(scope.isEmpty()){
+                    for(var imports: table.getImports()){
+                        if (imports.contains(idscope)) {
+                            scope = "import";
+                            break;
+                        }
+                    }
                 }
             }
         }
+
+        if(scope.equals("field")) {
+            for (var field : table.getFields()) {
+                if (field.getName().equals(node.get("name"))) {
+                    if (node.getParent().getKind().equals("AssignStmt")) {
+                        String name = node.get("name");
+                        String type = OptUtils.toOllirType(field.getType().getName());
+                        var computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
+                        code = String.format("putfield(this, %s, %s).V;", name + type, computation.getCode());
+                        return new OllirExprResult(computation.getComputation(), code);
+                    } else {
+                        Type fieldType = TypeUtils.getExprType(node, table);
+                        String fieldOllirType = OptUtils.toOllirType(fieldType);
+                        String tempVar = OptUtils.getTemp() + fieldOllirType;
+                        String fieldName = node.get("name");
+
+                        code = tempVar + SPACE + ASSIGN + fieldOllirType + SPACE + String.format("getfield(this, %s)", fieldName + fieldOllirType) + fieldOllirType + END_STMT;
+                        return new OllirExprResult(tempVar, code);
+                    }
+                }
+            }
+        }
+
         String id = node.get("name");
         Type type = TypeUtils.getExprType(node, table);
         String ollirType = OptUtils.toOllirType(type);
