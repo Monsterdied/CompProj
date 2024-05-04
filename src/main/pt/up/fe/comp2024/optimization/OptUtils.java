@@ -9,6 +9,8 @@ import static pt.up.fe.comp2024.ast.Kind.TYPE;
 
 public class OptUtils {
     private static int tempNumber = -1;
+    private static int ifNumber = -1;
+    private static int whileNumber = -1;
 
     public static String getTemp() {
 
@@ -20,20 +22,42 @@ public class OptUtils {
         return prefix + getNextTempNum();
     }
 
-    public static void decreaseTemp() {
-        tempNumber -= 1;
-
-    }
-
     public static int getNextTempNum() {
 
         tempNumber += 1;
         return tempNumber;
     }
 
+    public static String getIf(){
+        return getIf("if");
+    }
+
+    public static String getIf(String prefix) {
+        return prefix + getNextIfNum();
+    }
+
+    public static int getNextIfNum() {
+        ifNumber += 1;
+        return ifNumber;
+    }
+
+    public static String getWhile(){
+        return getWhile("");
+    }
+
+    public static String getWhile(String prefix) {
+        return prefix + getNextWhileNum();
+    }
+
+    public static int getNextWhileNum() {
+        whileNumber += 1;
+        return whileNumber;
+    }
+
     public static String toOllirType(JmmNode typeNode) {
 
         TYPE.checkOrThrow(typeNode);
+
 
         String typeName = typeNode.get("name");
 

@@ -53,6 +53,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(EXPR_STMT, this::visitExprStmt);
+        addVisit(IF_ELSE_STMT, this::visitIfElseStmt);
+        addVisit(WHILE_CONDITION, this::visitWhileStmt);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -317,6 +319,58 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(exprResult.getCode());
         return code.toString();
 
+    }
+
+    private String visitIfElseStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        var conditionExpr = node.getJmmChild(0).getJmmChild(0);
+        var conditionExprResult = exprVisitor.visit(conditionExpr);
+        code.append(conditionExprResult.getComputation());
+        var ifcondition = OptUtils.getIf();
+        code.append(String.format("if (%s) goto %s;",conditionExprResult.getCode(),ifcondition)).append(NL);
+
+        var blockStmt2 = node.getJmmChild(0).getJmmChild(2);
+        for(var child: blockStmt2.getChildren()){
+            code.append(visit(child));
+        }
+        code.append(String.format("goto end%s;",ifcondition)).append(NL);
+
+        code.append(String.format("%s:",ifcondition)).append(NL);
+
+        var blockStmt1 = node.getJmmChild(0).getJmmChild(1);
+        for(var child: blockStmt1.getChildren()){
+            code.append(visit(child));
+        }
+        code.append(String.format("end%s:",ifcondition)).append(NL);
+
+
+        return code.toString();
+    }
+
+    private String visitWhileStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
+        var whilecounter = OptUtils.getWhile();
+
+        code.append(String.format("whileCond%s:",whilecounter)).append(NL);
+
+        var whilecondition = exprVisitor.visit(node.getJmmChild(0).getJmmChild(0));
+
+        code.append(whilecondition.getComputation());
+
+        code.append(String.format("if (%s) goto whileLoop%s;",whilecondition.getCode(),whilecounter)).append(NL);
+        code.append(String.format("goto whileEnd%s;",whilecounter)).append(NL);
+
+        code.append(String.format("whileLoop%s:",whilecounter)).append(NL);
+
+        for(var child: node.getJmmChild(0).getJmmChild(1).getChildren()){
+            code.append(visit(child));
+        }
+
+        code.append(String.format("goto whileCond%s;",whilecounter)).append(NL);
+        code.append(String.format("whileEnd%s:",whilecounter)).append(NL);
+
+        return code.toString();
     }
 
     private String buildConstructor() {

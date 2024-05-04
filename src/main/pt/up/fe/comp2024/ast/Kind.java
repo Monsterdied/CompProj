@@ -18,6 +18,8 @@ public enum Kind {
     ASSIGN_STMT,
     RETURN_STMT,
     EXPR_STMT,
+    IF_ELSE_STMT,
+    WHILE_CONDITION,
     PAREN_EXPR,
     THIS_EXPR,
     METHOD_CALL_EXPR,
