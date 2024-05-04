@@ -134,6 +134,56 @@ public class TypeUtils {
         return new Type(table.getClassName(),false);
     }
 
+    public static String getVariableScope(JmmNode node,SymbolTable table){
+        String scope = "";
+        String idscope = node.get("name");
+        List<Symbol> parent = null;
+        if(node.getAncestor(MAIN_METHOD_DECL).isPresent()){
+            parent = table.getLocalVariables("main");
+        }
+        else{
+            parent = table.getLocalVariables(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+        }
+
+        //Variavel Local
+        for(var locals: parent){
+            if(locals.getName().equals(idscope)){
+                scope = "local";
+                break;
+            }
+        }
+        if(scope.isEmpty()){
+            //Variavel Param
+            if(!node.getAncestor(MAIN_METHOD_DECL).isPresent()) {
+                var parent_param = table.getParameters(node.getAncestor(METHOD_DECL).map(method -> method.get("name")).orElseThrow());
+                for (var param : parent_param) {
+                    if (param.getName().equals(idscope)) {
+                        scope = "param";
+                        break;
+                    }
+                }
+            }
+            if(scope.isEmpty()){
+                //Variavel Field
+                for(var field: table.getFields()) {
+                    if(field.getName().equals(idscope)){
+                        scope = "field";
+                        break;
+                    }
+                }
+                if(scope.isEmpty()){
+                    for(var imports: table.getImports()){
+                        if (imports.contains(idscope)) {
+                            scope = "import";
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return scope;
+    }
+
     /**
      * @param sourceType
      * @param destinationType

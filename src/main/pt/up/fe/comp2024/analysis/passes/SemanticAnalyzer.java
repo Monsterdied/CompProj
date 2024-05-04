@@ -79,8 +79,9 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         }
 
         for(var variables: method.getDescendants(Kind.VAR_REF_EXPR)){
+            var scope = TypeUtils.getVariableScope(variables,table);
            for(var field : table.getFields()){
-               if(field.getName().equals(variables.get("name"))){
+               if(field.getName().equals(variables.get("name")) && scope.equals("field")){
                    addReport(Report.newError(
                            Stage.SEMANTIC,
                            NodeUtils.getLine(method),
