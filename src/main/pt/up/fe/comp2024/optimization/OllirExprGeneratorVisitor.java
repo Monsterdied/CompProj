@@ -129,7 +129,13 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                 code.append(")").append(type_virtual).append(END_STMT);
             }
             else{
-                code.append(").V").append(END_STMT);
+                var type = TypeUtils.getExprType(nodeMethodCall.getJmmChild(0),table);
+                if(type.getName().equals(table.getClassName())){
+                    code.append(")").append(type_virtual).append(END_STMT);
+                }
+                else{
+                    code.append(").V").append(END_STMT);
+                }
             }
 
         }

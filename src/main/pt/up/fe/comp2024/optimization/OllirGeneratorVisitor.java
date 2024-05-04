@@ -315,7 +315,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         var expr = node.getJmmChild(0);
         var exprResult = exprVisitor.visit(expr);
+        var variable_type = TypeUtils.getExprType(node.getJmmChild(0).getJmmChild(0),table);
         code.append(exprResult.getComputation());
+        if(variable_type.getName().equals(table.getClassName())){
+            var tmp = OptUtils.getTemp();
+            Type function_type = table.getReturnType(node.getJmmChild(0).get("name"));
+            String ollir_type = OptUtils.toOllirType(function_type);
+            code.append(String.format("%s%s :=%s %s",tmp,ollir_type,ollir_type,exprResult.getCode()));
+            return code.toString();
+        }
         code.append(exprResult.getCode());
         return code.toString();
 

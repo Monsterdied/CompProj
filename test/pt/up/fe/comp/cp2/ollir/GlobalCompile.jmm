@@ -4,9 +4,14 @@ class A {
 
 	int a;
 
+    public int x(int a){
+		io.print(a);
+        return a;
+    }
+
     public static void main(String[] args){
-        int a;
-        a = 10;
-        io.print(10);
+        A a;
+        a = new A();
+        a.x(10);
     }
 }
