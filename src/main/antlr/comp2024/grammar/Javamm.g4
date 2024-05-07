@@ -128,6 +128,7 @@ expr
     : op=NOT expr #NotExpr
     | expr '.' name=(ID|'main') LPAREN args? RPAREN #MethodCallExpr
     | name=ID LPAREN args? RPAREN #MethodCallExpr
+    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     | expr op=(AND | OR) expr #BinaryExpr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
@@ -136,7 +137,7 @@ expr
     | name=(ID|'length'|'main') #VarRefExpr
     | LPAREN expr RPAREN #ParenExpr
     | expr '.' 'length' #ArrayLengthExpr
-    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
+
     | value=BOOLEAN_VALUE #BooleanLiteral
     | NEW type LBRACK expr RBRACK #NewArrayExpr
     | NEW name=(ID|'main') LPAREN RPAREN #NewClassExpr
