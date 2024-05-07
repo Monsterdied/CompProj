@@ -4,7 +4,7 @@ import Other;
 
 class BasicMethods extends Other {
 
-    public int func4(){
+    public int[] func4(){
         int[] k;
         k = new int[1];
         return k;
