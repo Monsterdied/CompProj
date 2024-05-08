@@ -64,6 +64,7 @@ public class JasminGenerator {
         generators.put(UnaryOpInstruction.class,this::generateUnaryOpInstruction);
         generators.put(GotoInstruction.class,this::dealWithGoTo);
         generators.put(OpCondInstruction.class,this::generateOpCondInstruction);
+        generators.put(ArrayOperand.class,this::generateArrayOperand);
     }
 
     public List<Report> getReports() {
@@ -278,23 +279,26 @@ public class JasminGenerator {
         }
 
         var operand = (Operand) lhs;
-
-        // get register
         var reg = currentMethod.getVarTable().get(operand.getName()).getVirtualReg();
-
-        // TODO: Hardcoded for int type, needs to be expanded
         ElementType type = operand.getType().getTypeOfElement();
         String fill = reg > 3 ? " " : "_";
-        switch (type) {
-            case INT32 -> code.append("istore");
-            case BOOLEAN -> code.append("istore");
-            case STRING -> code.append("astore");
-            case ARRAYREF -> code.append("astore");
-            case OBJECTREF -> code.append("astore");
-            default -> throw new NotImplementedException(type);
-        }
-        code.append(fill).append(reg);
 
+        if(operand instanceof ArrayOperand){
+            var operand1 = (ArrayOperand) operand;
+            var result = new StringBuilder();
+            result.append("aload").append(fill).append(reg).append(NL);
+            result.append(generators.apply(operand1.getIndexOperands().get(0)));
+            result.append(code);
+            result.append("iastore");
+            code = result;
+        }else {
+            switch (type) {
+                case INT32, BOOLEAN -> code.append("istore");
+                case STRING, ARRAYREF, OBJECTREF -> code.append("astore");
+                default -> throw new NotImplementedException(type);
+            }
+            code.append(fill).append(reg);
+        }
         return code.toString();
     }
     //TODO merge this with generateCallInstruction and generateCallInstructionFromAssign
@@ -306,6 +310,7 @@ public class JasminGenerator {
             case invokespecial -> code.append(DealWithInvokeSpecial(call,false));
             case invokevirtual -> code.append(DealWithInvokeVirtual(call,false));
             case NEW -> code.append(DealWithNew(call));
+            case arraylength -> code.append(generators.apply(call.getCaller())).append("arraylength").append(NL);
         }
         //code.append(generators.apply(call.getCaller()));
         return code.toString();
@@ -319,6 +324,7 @@ public class JasminGenerator {
             case invokespecial -> code.append(DealWithInvokeSpecial(call,true));
             case invokevirtual -> code.append(DealWithInvokeVirtual(call,true));
             case NEW -> code.append(DealWithNew(call));
+            case arraylength -> code.append(generators.apply(call.getCaller())).append("arraylength").append(NL);
         }
         //code.append(generators.apply(call.getCaller()));
         return code.toString();
@@ -408,6 +414,13 @@ public class JasminGenerator {
             default -> null;
         };
     }
+    private String generateArrayOperand(ArrayOperand arrayOperand){
+        var code = new StringBuilder();
+        code.append("aload").append(getIndexOfTheReg(arrayOperand.getName()));
+        code.append(generators.apply(arrayOperand.getIndexOperands().get(0)));
+        code.append("iaload").append(NL);
+        return code.toString();
+    }
     private String getIndexOfTheReg(String name){
         var reg = currentMethod.getVarTable().get(name).getVirtualReg();
         return (reg < 4 ? "_": " ") +reg + NL;
@@ -428,10 +441,19 @@ public class JasminGenerator {
             case DIV -> "idiv";
             case ANDB -> "iand";
             case LTH -> "if_icmplt ";
+            case LTE -> "if_icmple ";
+            case GTH -> "if_icmpgt ";
+            case GTE -> "if_icmpge ";
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
+        ArrayList<OperationType> operationsWithTags = new ArrayList<>();
+        operationsWithTags.add(OperationType.LTH);
+        operationsWithTags.add(OperationType.GTE);
+        operationsWithTags.add(OperationType.LTE);
+        operationsWithTags.add(OperationType.GTH);
         code.append(op);
-        if(binaryOp.getOperation().getOpType()!= OperationType.LTH) {
+
+        if(! operationsWithTags.contains(binaryOp.getOperation().getOpType())) {
             code.append(NL);
         }
 
