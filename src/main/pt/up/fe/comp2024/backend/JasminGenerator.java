@@ -34,6 +34,7 @@ public class JasminGenerator {
     List<Report> reports;
 
     String code;
+    Integer labelCounterBranchs = 0;
 
     Method currentMethod;
     //Map<String,Descriptor> varTable = new HashMap<>();
@@ -51,6 +52,7 @@ public class JasminGenerator {
         generators.put(ClassUnit.class, this::generateClassUnit);
         generators.put(Method.class, this::generateMethod);
         generators.put(AssignInstruction.class, this::generateAssign);
+        generators.put(SingleOpCondInstruction.class,this::generateSingleOpCondInstruction);
         generators.put(SingleOpInstruction.class, this::generateSingleOp);
         generators.put(LiteralElement.class, this::generateLiteral);
         generators.put(Operand.class, this::generateOperand);
@@ -60,6 +62,8 @@ public class JasminGenerator {
         generators.put(PutFieldInstruction.class,this::PutFieldInstruction );
         generators.put(GetFieldInstruction.class,this::GetFieldInstruction );
         generators.put(UnaryOpInstruction.class,this::generateUnaryOpInstruction);
+        generators.put(GotoInstruction.class,this::dealWithGoTo);
+        generators.put(OpCondInstruction.class,this::generateOpCondInstruction);
     }
 
     public List<Report> getReports() {
@@ -238,6 +242,11 @@ public class JasminGenerator {
         code.append(TAB).append(".limit locals 99").append(NL);
 
         for (var inst : method.getInstructions()) {
+            for (var label : method.getLabels().entrySet()) {
+                if (label.getValue().equals(inst)){
+                    code.append(label.getKey()).append(":").append(NL);
+                }
+            }
             var instCode = StringLines.getLines(generators.apply(inst)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
@@ -418,22 +427,53 @@ public class JasminGenerator {
             case SUB -> "isub";
             case DIV -> "idiv";
             case ANDB -> "iand";
-            case NEQ -> "ineg";
+            case LTH -> "if_icmplt ";
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
+        code.append(op);
+        if(binaryOp.getOperation().getOpType()!= OperationType.LTH) {
+            code.append(NL);
+        }
 
-        code.append(op).append(NL);
 
         return code.toString();
     }
+    private String generateSingleOpCondInstruction(SingleOpCondInstruction singleOpCond){
+        var code = new StringBuilder();
+        code.append(generators.apply(singleOpCond.getCondition()));
+        code.append("ifne ").append(singleOpCond.getLabel()).append(NL);
+        return code.toString();
+    }
+    private String generateOpCondInstruction(OpCondInstruction OpCondInstruction){
+        var code = new StringBuilder();
+        code.append(generators.apply(OpCondInstruction.getCondition())).append(OpCondInstruction.getLabel()).append(NL);
+        return code.toString();
+
+    }
+    private String generateBooleansBranchs(){
+        var code = new StringBuilder();
+        code.append("true__").append(labelCounterBranchs).append(NL);
+        code.append("iconst_0").append(NL);
+        code.append("goto false__").append(labelCounterBranchs).append(NL);
+        code.append("true__").append(labelCounterBranchs).append(":").append(NL);
+        code.append("iconst_1").append(NL);
+        code.append("false__").append(labelCounterBranchs).append(":").append(NL);
+        labelCounterBranchs++;
+        return code.toString();
+    }
+    private String dealWithGoTo(GotoInstruction goTo){
+        var code = new StringBuilder();
+        code.append("goto ").append(goTo.getLabel()).append(NL);
+        return code.toString();
+    }
+
     private String generateUnaryOpInstruction(UnaryOpInstruction Op){
         var code = new StringBuilder();
-        code.append(generators.apply(Op.getOperand()));
-        var op = switch (Op.getOperation().getOpType()) {
-            case NOTB -> "ineg";
+        code.append(generators.apply(Op.getOperand())).append(NL);
+        switch (Op.getOperation().getOpType()) {
+            case NOTB -> code.append("ifeq ").append(this.generateBooleansBranchs()).append(NL);
             default -> throw new NotImplementedException(Op.getOperation().getOpType());
-        };
-        code.append(op).append(NL);
+        }
         return code.toString();
     }
     private String generateReturn(ReturnInstruction returnInst) {
