@@ -12,6 +12,7 @@ import java.lang.invoke.SwitchPoint;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 //import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 //import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ public class JasminGenerator {
 
     List<Report> reports;
 
+    Integer stackSize;
     String code;
     Integer labelCounterBranchs = 0;
 
@@ -94,16 +96,7 @@ public class JasminGenerator {
         code.append(".super ").append(superClass).append(NL);
         //code.append(".super java/lang/Object").append(NL);
 
-        // generate a single constructor method
-        /*var defaultConstructor = """
-                ;default constructor
-                .method public <init>()V
-                    aload_0
-                    invokespecial java/lang/Object/<init>()V
-                    return
-                .end method
-                """;
-        code.append(defaultConstructor);*/
+
 
         // generate code for all other methods
         for (var field : classUnit.getFields()){
@@ -119,28 +112,26 @@ public class JasminGenerator {
                     .append(field_to_jasmin(field.getFieldType()))
                     .append(NL);
         }
-        var code1 = new StringBuilder();
-        var code2 = new StringBuilder();
         for (var method : ollirResult.getOllirClass().getMethods()) {
 
             // Ignore constructor, since there is always one constructor
             // that receives no arguments, and has been already added
             // previously
             if (method.isConstructMethod()) {
-                code1.append(".method public <init>()V").append(NL)
+                code.append(".method public <init>()V").append(NL)
                         .append(TAB).append("aload_0").append(NL)
                         .append(TAB).append("invokespecial ").append(superClass).append("/<init>(");
                         for (var param : method.getParams()) {
-                            code1.append(field_to_jasmin(param.getType()));
+                            code.append(field_to_jasmin(param.getType()));
                         }
-                                code1.append(")V").append(NL)
+                                code.append(")V").append(NL)
                         .append(TAB).append("return").append(NL)
                         .append(".end method").append(NL);
                 continue;
             }
-            code2.append(generators.apply(method));
+            code.append(generators.apply(method));
         }
-        return code.append(code1).append(code2).toString();
+        return code.toString();
     }
     private String TypeToJasmin(Type type){
         switch (type.getTypeOfElement()){
@@ -239,8 +230,9 @@ public class JasminGenerator {
         }
         code.append(")").append(field_to_jasmin(method.getReturnType())).append(NL);
         // Add limits
+        this.stackSize = 0;
         code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
+        code.append(TAB).append(".limit locals ").append(this.getLocalLimits(method)).append(NL);
 
         for (var inst : method.getInstructions()) {
             for (var label : method.getLabels().entrySet()) {
@@ -261,7 +253,14 @@ public class JasminGenerator {
 
         return code.toString();
     }
-
+    private int getLocalLimits(Method method){
+        HashSet<Integer> registers = new HashSet<>();
+        registers.add(0);//Register 0 is this it can always be used even when it is not on the var table
+        for (var local : method.getVarTable().values()){
+            registers.add(local.getVirtualReg());
+        }
+        return registers.size();
+    }
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
@@ -403,6 +402,19 @@ public class JasminGenerator {
     }
 
     private String generateLiteral(LiteralElement literal) {
+        if (literal.getType().getTypeOfElement() != ElementType.INT32 && literal.getType().getTypeOfElement() != ElementType.BOOLEAN) {
+            return "ldc " + literal.getLiteral() + NL;
+        }
+        Integer value = Integer.valueOf(literal.getLiteral());
+        if(value == -1){
+            return "iconst_m1" + NL;
+        }else if( value >= 0 && value <= 5){
+            return "iconst_" + value + NL;
+        } else if (value >= -128 && value <= 127) {
+            return "bipush " + value + NL;
+        } else if (value >= -32768 && value <= 32767) {
+            return "sipush " + value + NL;
+        }
         return "ldc " + literal.getLiteral() + NL;
     }
     private String generateOperand(Operand operand) {
@@ -425,14 +437,55 @@ public class JasminGenerator {
         var reg = currentMethod.getVarTable().get(name).getVirtualReg();
         return (reg < 4 ? "_": " ") +reg + NL;
     }
-
+    private String dealWithCondicionalBranch(BinaryOpInstruction binaryOp){
+        Element leftOperand = binaryOp.getLeftOperand();
+        Element rightOperand = binaryOp.getRightOperand();
+        boolean isZeroRight = false;
+        boolean hasZero = false;
+        if (rightOperand instanceof LiteralElement) {
+            if(((LiteralElement) rightOperand).getLiteral().equals("0")) {
+                isZeroRight = true;
+                hasZero = true;
+            }
+        }
+        if(leftOperand instanceof LiteralElement){
+            if(((LiteralElement) leftOperand).getLiteral().equals("0")){
+                hasZero = true;
+            }
+        }
+        switch(binaryOp.getOperation().getOpType()){
+            case LTH -> {
+                if (isZeroRight){
+                    return generators.apply(leftOperand) + "iflt ";
+                }
+                if (hasZero){
+                    return generators.apply(rightOperand) + "ifge " ;
+                }
+                return generators.apply(leftOperand) + generators.apply(rightOperand) + "if_icmplt ";
+            }
+            case GTE -> {
+                if (isZeroRight){
+                    return generators.apply(leftOperand) + "ifge ";
+                }
+                if (hasZero){
+                    return generators.apply(rightOperand) + "iflt ";
+                }
+                return generators.apply(leftOperand) + generators.apply(rightOperand) + "if_icmpge ";
+            }
+            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
+        }
+    }
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
         var code = new StringBuilder();
-
+        ArrayList<OperationType> operationsWithTags = new ArrayList<>();
+        operationsWithTags.add(OperationType.LTH);
+        operationsWithTags.add(OperationType.GTE);
+        if(operationsWithTags.contains(binaryOp.getOperation().getOpType())){
+            return this.dealWithCondicionalBranch(binaryOp);
+        }
         // load values on the left and on the right
         code.append(generators.apply(binaryOp.getLeftOperand()));
         code.append(generators.apply(binaryOp.getRightOperand()));
-
         // apply operation
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "iadd";
@@ -440,19 +493,9 @@ public class JasminGenerator {
             case SUB -> "isub";
             case DIV -> "idiv";
             case ANDB -> "iand";
-            case LTH -> "if_icmplt ";
-            case LTE -> "if_icmple ";
-            case GTH -> "if_icmpgt ";
-            case GTE -> "if_icmpge ";
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
-        ArrayList<OperationType> operationsWithTags = new ArrayList<>();
-        operationsWithTags.add(OperationType.LTH);
-        operationsWithTags.add(OperationType.GTE);
-        operationsWithTags.add(OperationType.LTE);
-        operationsWithTags.add(OperationType.GTH);
         code.append(op);
-
         if(! operationsWithTags.contains(binaryOp.getOperation().getOpType())) {
             code.append(NL);
         }
