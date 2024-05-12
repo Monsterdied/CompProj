@@ -11,6 +11,7 @@ public class OptUtils {
     private static int tempNumber = -1;
     private static int ifNumber = -1;
     private static int whileNumber = -1;
+    private static int varargNumber = -1;
 
     public static String getTemp() {
 
@@ -52,6 +53,18 @@ public class OptUtils {
     public static int getNextWhileNum() {
         whileNumber += 1;
         return whileNumber;
+    }
+
+    public static String getVararg(){
+        return getVararg("__varargs_array_");
+    }
+
+    public static String getVararg(String prefix) {
+        return prefix + getNextVarArgNum() + ".array.i32";
+    }
+    public static int getNextVarArgNum() {
+        varargNumber += 1;
+        return varargNumber;
     }
 
     public static String toOllirType(JmmNode typeNode) {
