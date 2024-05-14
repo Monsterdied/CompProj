@@ -1,22 +1,28 @@
-import ioPlus;
-class ComplexArrayAccess {
+import io;
 
-    public int func(int a) {
-        return a;
+class ArrayVarargs {
+
+    public static void main(String[] args) {
+        ArrayVarargs a;
+        a = new ArrayVarargs();
+
+        a.bar();
     }
 
-	public static void main(String[] args) {
-	    int[] a;
-        int i;
-        ComplexArrayAccess d;
-        d = new ComplexArrayAccess();
-        a = new int[5];
-        i = 1;
-        ioPlus.printResult(a[d.func(0)]);
-        ioPlus.printResult(a[i]);
-        ioPlus.printResult(a[4/2]);
-        ioPlus.printResult(a[a[2]]);
-        ioPlus.printResult(a[a.length -1 ]);
+    int foo(int... a) {
+        return a[0];
+    }
 
-	}
+    int bar() {
+        int res;
+
+        res = this.foo(1, 2, 3);
+        io.println(res);
+
+        res = this.foo(4);
+        io.println(res);
+
+        return res;
+    }
+
 }

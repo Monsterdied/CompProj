@@ -47,8 +47,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(ARRAY_ACCESS_EXPR, this::visitVarRef);
         addVisit(NEW_ARRAY_EXPR,this::visitNewArray);
         addVisit(ARRAY_LENGTH_EXPR, this::visitArrayLength);
+        addVisit(ARRAY_INIT_EXPRESSION,this::visitArrayInit);
         setDefaultVisit(this::defaultVisit);
     }
+
 
     private OllirExprResult visitThisExpr(JmmNode nodeThis, Void unused){
         var type = TypeUtils.getExprType(nodeThis,table);
@@ -437,6 +439,34 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         return new OllirExprResult(code.toString(),computation.toString());
     }
 
+    private OllirExprResult visitArrayInit(JmmNode jmmNode, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+
+        String tmp = OptUtils.getTemp() + ".array.i32";
+        computation.append(tmp).append(SPACE)
+                .append(ASSIGN).append(".array.i32").append(SPACE)
+                .append(String.format("new(array, %s.i32).array.i32;",jmmNode.getChildren().size())).append("\n");
+
+        String vararg = OptUtils.getVararg();
+
+        computation.append(vararg).append(SPACE)
+                .append(ASSIGN).append(".array.i32").append(SPACE)
+                .append(tmp).append(";\n");
+
+        int counter_array = 0;
+        for(var child : jmmNode.getChildren()) {
+            computation.append(vararg).
+                    append(String.format("[%s.i32].i32 :=.i32 %s;\n",counter_array,visit(child).getCode()));
+            counter_array++;
+        }
+
+        code.append(vararg);
+
+
+
+        return new OllirExprResult(code.toString(),computation.toString());
+    }
     /**
      * Default visitor. Visits every child node and return an empty result.
      *
