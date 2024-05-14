@@ -3,7 +3,7 @@ class ByteCodeIndexes2 {
     public int func(int a) 
     {   
         int b;
-        b = 11; 
+        b = 11;
         return b;
     }
 }
