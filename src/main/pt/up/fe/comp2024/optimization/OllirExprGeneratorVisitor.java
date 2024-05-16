@@ -132,7 +132,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                         }
 
                     } else {
-                        if(method != null){
+                        var methodhasVarArg = methodHasVarArg(nodeMethodCall);
+                        if(method != null && methodhasVarArg){
                             var paramlist = method.getChildren("ParamList").get(0).getChildren();
                             for(int j = 0; j < paramlist.size(); j++){
                                 var param = paramlist.get(j);
@@ -143,12 +144,13 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                                         code.append(var_arg_result.getCode());
                                         vararg_done = true;
                                     } else{
-                                        code.append(expr.getCode());
+                                        if(!vararg_done) {
+                                            code.append(expr.getCode());
+                                        }
                                     }
-                                }else{
-                                    code.append(expr.getCode());
                                 }
                             }
+
                         }else{
                             code.append(expr.getCode());
                         }
@@ -521,6 +523,19 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         code.append(tempVar);
         return new OllirExprResult(code.toString(),computation.toString());
+    }
+
+    private boolean methodHasVarArg(JmmNode node){
+        var method = getMethod(node,table);
+        if(method != null){
+            var paramlist = method.getChildren("ParamList").get(0).getChildren();
+            for(var param : paramlist){
+                if(param.getKind().equals("VarArgArray")){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     /**
      * Default visitor. Visits every child node and return an empty result.
