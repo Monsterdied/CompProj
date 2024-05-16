@@ -178,12 +178,12 @@ public class JasminGenerator {
     }
     private String PutFieldInstruction(PutFieldInstruction fieldInstruction){
         var code = new StringBuilder();
-        subStackSize(2);//pops first and second operand
         Operand firstElement = (Operand) fieldInstruction.getChildren().get(0);
         Operand secondElement = (Operand) fieldInstruction.getChildren().get(1);
         Element thridElement = (Element)fieldInstruction.getChildren().get(2);
         code.append(generators.apply(firstElement)).append(NL).append(generators.apply(thridElement));
         code.append("putfield ").append(getClass(firstElement.getName())).append("/").append(secondElement.getName()).append(" ").append(field_to_jasmin(secondElement.getType()));
+        subStackSize(2);//pops first and second operand
         return code.toString();
     }
     private String getClass(String className){
@@ -245,8 +245,8 @@ public class JasminGenerator {
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
             codeTmp.append(instCode);
         }
-        code.append(TAB).append(".limit stack ").append(99).append(NL);
-        //code.append(TAB).append(".limit stack ").append(this.maxStackSize).append(NL);
+        //code.append(TAB).append(".limit stack ").append(99).append(NL);
+        code.append(TAB).append(".limit stack ").append(this.maxStackSize).append(NL);
         code.append(TAB).append(".limit locals ").append(this.getLocalLimits(method)).append(NL);
         code.append(codeTmp);
         code.append(".end method\n");
@@ -363,7 +363,6 @@ public class JasminGenerator {
             case NEW -> code.append(DealWithNew(call));
             case arraylength -> code.append(generators.apply(call.getCaller())).append("arraylength").append(NL);
         }
-        //code.append(generators.apply(call.getCaller()));
         return code.toString();
         // invoke method
     }
@@ -390,7 +389,6 @@ public class JasminGenerator {
         subStackSize(argumentsNumber);
         if ( ! assignCalled && call.getReturnType().getTypeOfElement() != VOID ){
             code.append("pop").append(NL);
-            subStackSize(1);
         }
         return code.toString();
     }
@@ -430,7 +428,6 @@ public class JasminGenerator {
         subStackSize(argumentsNumber);
         if ( ! assignedCalled && call.getReturnType().getTypeOfElement() != VOID ){
             code.append("pop").append(NL);
-            subStackSize(1);
         }
         return code.toString();
     }
@@ -445,6 +442,7 @@ public class JasminGenerator {
         }else {
             code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
         }
+        addStackSize(1);
         return code.toString();
     }
     private String generateSingleOp(SingleOpInstruction singleOp) {
