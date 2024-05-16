@@ -1,45 +1,60 @@
-import ioPlus;
+import io;
 
-ComplexArrayAccess {
+Arithmetic_and{
 
-    .method public func(a.i32).i32 {
+   .construct Arithmetic_and().V {
+       invokespecial(this, "<init>").V;
+   }
 
-        ret.i32 $1.a.i32;
+   .method public static main(args.array.String).V {
+      tmp0.Arithmetic_and :=.Arithmetic_and new(Arithmetic_and).Arithmetic_and;
+      invokespecial(tmp0.Arithmetic_and, "<init>").V;
+      c.Arithmetic_and :=.Arithmetic_and tmp0.Arithmetic_and;
+      if(1.bool) goto true_0;
+      tmp1.bool :=.bool 0.bool;
+      goto end_0;
+      true_0:
+      tmp2.bool :=.bool invokevirtual(c.Arithmetic_and, "p", 1.i32).bool;
+      tmp1.bool :=.bool tmp2.bool;
+      end_0:
+      a.bool :=.bool tmp1.bool;
+      if(1.bool) goto true_1;
+      tmp1.bool :=.bool 0.bool;
+      goto end_1;
+      true_1:
+      tmp2.bool :=.bool invokevirtual(c.Arithmetic_and, "p", 1.i32).bool;
+      tmp1.bool :=.bool tmp2.bool;
+      end_1:
+      a.bool :=.bool tmp1.bool;
+      if(1.bool) goto true_2;
+      tmp1.bool :=.bool 0.bool;
+      goto end_2;
+      true_2:
+      tmp2.bool :=.bool invokevirtual(c.Arithmetic_and, "p", 1.i32).bool;
+      tmp1.bool :=.bool tmp2.bool;
+      end_2:
+      a.bool :=.bool tmp1.bool;
+      if(1.bool) goto true_3;
+      tmp1.bool :=.bool 0.bool;
+      goto end_3;
+      true_3:
+      tmp2.bool :=.bool invokevirtual(c.Arithmetic_and, "p", 1.i32).bool;
+      tmp1.bool :=.bool tmp2.bool;
+      end_3:
+      a.bool :=.bool tmp1.bool;
+      if(1.bool) goto true_4;
+      tmp1.bool :=.bool 0.bool;
+      goto end_4;
+      true_4:
+      tmp2.bool :=.bool invokevirtual(c.Arithmetic_and, "p", 1.i32).bool;
+      tmp1.bool :=.bool tmp2.bool;
+      end_4:
+      a.bool :=.bool tmp1.bool;
+      ret.V ;
+   }
 
-    }
-
-    .method public static main(args.array.String).V {
-
-        d.ComplexArrayAccess :=.ComplexArrayAccess new(ComplexArrayAccess).ComplexArrayAccess;
-        invokespecial(d.ComplexArrayAccess, "<init>").V;
-
-        a.array.i32 :=.array.i32 new(array, 5.i32).array.i32;
-
-        a.array.i32 :=.array.i32 new(array, 5.i32).array.i32;
-
-        a.array.i32 :=.array.i32 new(array, 5.i32).array.i32;
-
-        a[0.i32].i32 :=.i32 1.i32;
-
-        a[1.i32].i32 :=.i32 2.i32;
-
-        t5.i32 :=.i32 a[1.i32].i32;
-        t6.i32 :=.i32 a[0.i32].i32;
-        i.i32 :=.i32 t5.i32 +.i32 t6.i32;
-
-        t8.i32 :=.i32 a[1.i32].i32;
-        t9.i32 :=.i32 a[0.i32].i32;
-        i.i32 :=.i32 t8.i32 +.i32 t9.i32;
-
-        t11.i32 :=.i32 a[1.i32].i32;
-        t12.i32 :=.i32 a[0.i32].i32;
-        i.i32 :=.i32 t11.i32 +.i32 t12.i32;
-
-        ret.V;
-
-    }
-
-    .construct ComplexArrayAccess().V {
-        invokespecial(this, "<init>").V;
-    }
+   .method p(value.i32).bool {
+      invokestatic(io, "print", value.i32).V;
+      ret.bool 1.bool;
+   }
 }

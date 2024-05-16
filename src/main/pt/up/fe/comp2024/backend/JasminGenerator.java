@@ -248,6 +248,9 @@ public class JasminGenerator {
         //code.append(TAB).append(".limit stack ").append(99).append(NL);
         code.append(TAB).append(".limit stack ").append(this.maxStackSize).append(NL);
         code.append(TAB).append(".limit locals ").append(this.getLocalLimits(method)).append(NL);
+        if(this.stackSize > 1 || this.stackSize < 0){
+            throw new NotImplementedException("");
+        }
         code.append(codeTmp);
         code.append(".end method\n");
 
@@ -450,7 +453,7 @@ public class JasminGenerator {
             ArrayType array = (ArrayType) call.getReturnType();
 
             code.append("newarray ").append(TypeToJasminArrayType(array.getElementType())).append(NL);
-            //subStackSize(1);//test fails carefull TODO REMOVE THIS LINE FOR 97% OF THE TESTS
+            subStackSize(1);//test fails carefull TODO REMOVE THIS LINE FOR 97% OF THE TESTS
         }else {
             code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
         }
@@ -584,6 +587,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
         code.append(generators.apply(singleOpCond.getCondition()));
         code.append("ifne ").append(singleOpCond.getLabel()).append(NL);
+        subStackSize(1);
         return code.toString();
     }
     private String generateOpCondInstruction(OpCondInstruction OpCondInstruction){
