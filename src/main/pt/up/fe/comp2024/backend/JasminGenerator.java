@@ -246,7 +246,8 @@ public class JasminGenerator {
             codeTmp.append(instCode);
         }
         code.append(TAB).append(".limit stack ").append(this.maxStackSize).append(NL);
-        code.append(TAB).append(".limit locals ").append(this.getLocalLimits(method)).append(NL);
+        code.append(TAB).append(".limit locals 99");
+        //code.append(TAB).append(".limit locals ").append(this.getLocalLimits(method)).append(NL);
         code.append(codeTmp);
         code.append(".end method\n");
 
