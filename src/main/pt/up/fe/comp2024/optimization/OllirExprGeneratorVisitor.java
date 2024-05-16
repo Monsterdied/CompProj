@@ -82,6 +82,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         }
 
+
+        var method = getMethod(nodeMethodCall, table);
+        boolean vararg_done = false;
+
         String arg_type ="";
         var args_node_list = nodeMethodCall.getChildren("Args");
         if (!args_node_list.isEmpty()) {
@@ -118,7 +122,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                             String tempVar = OptUtils.getTemp() + resOllirType;
                             computation.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(expr.getCode()).append(";\n");
                             code.append(tempVar);
-                        }else{
+                        }
+                        else{
                             Type resType = TypeUtils.getExprType(arg, table);
                             String resOllirType = OptUtils.toOllirType(resType);
                             String tempVar = OptUtils.getTemp() + resOllirType;
@@ -127,10 +132,29 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                         }
 
                     } else {
-                        code.append(expr.getCode());
+                        if(method != null){
+                            var paramlist = method.getChildren("ParamList").get(0).getChildren();
+                            for(int j = 0; j < paramlist.size(); j++){
+                                var param = paramlist.get(j);
+                                if(param.getKind().equals("VarArgArray")){
+                                    if(i>=j && !vararg_done){
+                                        var var_arg_result = buildVarArg(arg,j);
+                                        computation.append(var_arg_result.getComputation());
+                                        code.append(var_arg_result.getCode());
+                                        vararg_done = true;
+                                    } else{
+                                        code.append(expr.getCode());
+                                    }
+                                }else{
+                                    code.append(expr.getCode());
+                                }
+                            }
+                        }else{
+                            code.append(expr.getCode());
+                        }
                     }
                 }
-                if (i < args_nodes.size() - 1) {
+                if ((i < args_nodes.size() - 1) && !vararg_done ) {
                     code.append(", ");
                 }
             }
@@ -465,6 +489,37 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
 
 
+        return new OllirExprResult(code.toString(),computation.toString());
+    }
+
+    private JmmNode getMethod(JmmNode node, SymbolTable table){
+        var classNode = node.getAncestor("ClassDecl").orElseThrow();
+
+        for(var method : classNode.getChildren("MethodDecl")){
+            if(method.get("name").equals(node.get("name"))){
+                return method;
+            }
+        }
+        return null;
+    }
+
+    private OllirExprResult buildVarArg(JmmNode node, Integer i){
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+        var args = node.getAncestor("Args").orElseThrow();
+        var arg_size = args.getChildren().size() - i;
+
+        String tempVar = OptUtils.getTemp() + ".array.i32";
+        computation.append(tempVar).append(SPACE).
+                append(ASSIGN).append(".array.i32").append(SPACE).
+                append("new(array, ").append(arg_size).append(".i32).array.i32;\n");
+
+        String vararg = OptUtils.getVararg();
+        for(int j = i; j < args.getChildren().size(); j++){
+            computation.append(vararg).append(String.format("[%s.i32].i32 :=.i32 %s;\n",j,visit(args.getChildren().get(j)).getCode()));
+        }
+
+        code.append(tempVar);
         return new OllirExprResult(code.toString(),computation.toString());
     }
     /**
