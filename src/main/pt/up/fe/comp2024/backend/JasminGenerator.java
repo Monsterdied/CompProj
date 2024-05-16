@@ -373,7 +373,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
         //probably wrong
         code.append(generators.apply(call.getCaller()));
-        int argumentsNumber = 0;
+        int argumentsNumber = 1;
         for (var arg : call.getArguments()) {
             argumentsNumber++;
             code.append(generators.apply(arg));
@@ -412,6 +412,9 @@ public class JasminGenerator {
         }
         code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
         subStackSize(argumentsNumber);
+        if(call.getReturnType().getTypeOfElement() != VOID){
+            addStackSize(1);
+        }
         return code.toString();
     }
     private String DealWithInvokeSpecial(CallInstruction call,boolean assignedCalled){

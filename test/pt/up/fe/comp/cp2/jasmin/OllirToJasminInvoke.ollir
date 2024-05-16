@@ -1,15 +1,24 @@
-import io;
+import ioPlus;
 
-Test {
+ConditionArgsFuncCall {
 
-	.construct Test().V {
-		invokespecial(this, "<init>").V;
-	}
-	.method public static main(args.array.String).V {
-		test.Test :=.Test new(Test).Test;
-		invokespecial(test.Test,"<init>").V;
+    .method public func(b.bool).i32 {
 
-		ret.V;
-	}
+        invokestatic(ioPlus, "printResult", 10.i32).V;
 
+        invokestatic(ioPlus, "printResult", 10.i32).V;
+
+        ret.i32 1.i32;
+
+    }
+
+    .method public static main(args.array.String).V {
+
+        ret.V;
+
+    }
+
+    .construct ConditionArgsFuncCall().V {
+        invokespecial(this, "<init>").V;
+    }
 }
