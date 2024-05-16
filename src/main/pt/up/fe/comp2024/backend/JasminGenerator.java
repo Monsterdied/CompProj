@@ -450,7 +450,7 @@ public class JasminGenerator {
             ArrayType array = (ArrayType) call.getReturnType();
 
             code.append("newarray ").append(TypeToJasminArrayType(array.getElementType())).append(NL);
-            subStackSize(1);//test fails carefull TODO REMOVE THIS LINE FOR 97% OF THE TESTS
+            //subStackSize(1);//test fails carefull TODO REMOVE THIS LINE FOR 97% OF THE TESTS
         }else {
             code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
         }
