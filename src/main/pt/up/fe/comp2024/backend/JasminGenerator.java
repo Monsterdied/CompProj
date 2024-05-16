@@ -417,7 +417,7 @@ public class JasminGenerator {
     private String DealWithInvokeSpecial(CallInstruction call,boolean assignedCalled){
         var code = new StringBuilder();
         code.append(generators.apply(call.getCaller()));
-        int argumentsNumber = 0;
+        int argumentsNumber = 1;
         for (var arg : call.getArguments()) {
             argumentsNumber++;
             code.append(generators.apply(arg));
@@ -447,7 +447,7 @@ public class JasminGenerator {
             ArrayType array = (ArrayType) call.getReturnType();
 
             code.append("newarray ").append(TypeToJasminArrayType(array.getElementType())).append(NL);
-            //subStackSize(1);
+            subStackSize(1);//test fails carefull TODO REMOVE THIS LINE FOR 97% OF THE TESTS
         }else {
             code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
         }
