@@ -447,6 +447,7 @@ public class JasminGenerator {
             ArrayType array = (ArrayType) call.getReturnType();
 
             code.append("newarray ").append(TypeToJasminArrayType(array.getElementType())).append(NL);
+            subStackSize(1);
         }else {
             code.append("new ").append(((Operand) call.getCaller()).getName()).append(NL);
         }
