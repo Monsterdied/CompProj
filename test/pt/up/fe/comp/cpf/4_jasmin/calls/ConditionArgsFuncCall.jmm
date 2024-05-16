@@ -17,6 +17,6 @@ class ConditionArgsFuncCall {
         b = 5;
         i = true;
         j = false;
-		a = d.func(a < b, i && j , a < b && i, !i);
+
 	}
 }
