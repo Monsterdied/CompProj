@@ -387,8 +387,12 @@ public class JasminGenerator {
         }
         code.append(")").append(field_to_jasmin(call.getReturnType())).append(NL);
         subStackSize(argumentsNumber);
+        if(call.getReturnType().getTypeOfElement() != VOID){
+            addStackSize(1);
+        }
         if ( ! assignCalled && call.getReturnType().getTypeOfElement() != VOID ){
             code.append("pop").append(NL);
+            subStackSize(1);
         }
         return code.toString();
     }
@@ -426,8 +430,12 @@ public class JasminGenerator {
         }
         code.append(")V").append(NL);
         subStackSize(argumentsNumber);
+        if(call.getReturnType().getTypeOfElement() != VOID){
+            addStackSize(1);
+        }
         if ( ! assignedCalled && call.getReturnType().getTypeOfElement() != VOID ){
             code.append("pop").append(NL);
+            subStackSize(1);
         }
         return code.toString();
     }
