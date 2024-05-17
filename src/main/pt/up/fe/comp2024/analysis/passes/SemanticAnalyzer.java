@@ -174,6 +174,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
         }
 
         // Check if parameters are valid types
+        /*
         for (var param : table.getParameters(currentMethod)) {
             String paramType = param.getType().getName();
             boolean valid = Objects.equals(paramType, "int") ||
@@ -191,6 +192,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
                 );
             }
         }
+        */
 
         return null;
     }
