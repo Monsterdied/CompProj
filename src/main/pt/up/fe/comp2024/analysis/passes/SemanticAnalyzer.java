@@ -178,8 +178,7 @@ public class SemanticAnalyzer extends AnalysisVisitor {
             String paramType = param.getType().getName();
             boolean valid = Objects.equals(paramType, "int") ||
                     Objects.equals(paramType, "boolean") ||
-                    Objects.equals(paramType, "int[]") ||
-                    Objects.equals(paramType, "boolean[]") ||
+                    Objects.equals(paramType, "String") ||
                     table.getImports().contains(paramType);
 
             if (!valid) {
