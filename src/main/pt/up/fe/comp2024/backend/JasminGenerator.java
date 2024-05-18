@@ -248,9 +248,9 @@ public class JasminGenerator {
         //code.append(TAB).append(".limit stack ").append(99).append(NL);
         code.append(TAB).append(".limit stack ").append(this.maxStackSize).append(NL);
         code.append(TAB).append(".limit locals ").append(this.getLocalLimits(method)).append(NL);
-        /*if(this.stackSize > 1 || this.stackSize < 0){
-            throw new NotImplementedException("");
-        }*/
+        if(this.stackSize > 1 || this.stackSize < 0){
+            //throw new NotImplementedException("testing " + this.stackSize);
+        }
         code.append(codeTmp);
         code.append(".end method\n");
 
@@ -560,7 +560,11 @@ public class JasminGenerator {
         operationsWithTags.add(OperationType.LTH);
         operationsWithTags.add(OperationType.GTE);
         if(operationsWithTags.contains(binaryOp.getOperation().getOpType())){
-            return this.dealWithCondicionalBranch(binaryOp);
+            var branch = this.dealWithCondicionalBranch(binaryOp);
+            code.append(branch);
+            addStackSize(1);
+            code.append(generateBooleansBranchs());
+            return  code.toString();
         }
         // load values on the left and on the right
         code.append(generators.apply(binaryOp.getLeftOperand()));
@@ -592,7 +596,7 @@ public class JasminGenerator {
     }
     private String generateOpCondInstruction(OpCondInstruction OpCondInstruction){
         var code = new StringBuilder();
-        code.append(generators.apply(OpCondInstruction.getCondition())).append(OpCondInstruction.getLabel()).append(NL);
+        code.append(this.dealWithCondicionalBranch((BinaryOpInstruction) OpCondInstruction.getCondition())).append(OpCondInstruction.getLabel()).append(NL);
         return code.toString();
 
     }
