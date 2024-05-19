@@ -175,7 +175,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             return new OllirExprResult(code.toString(), computation);
         }
         if(isStatic){
-                code.append(").V").append(END_STMT);
+            code.append(").V").append(END_STMT);
         }
         else{
             if(table.getMethods().contains(nodeMethodCall.get("name"))){

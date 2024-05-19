@@ -1,17 +1,16 @@
 import io;
+import java.util.List;
+import A;
+class Simple extends A{
 
-class VarargsAndArrayInit {
-
-    public static void main(String[] args) {
-        int[] b;
-        int a;
-        b = [1,2,3,4,5];
-        a = b[1];
-        b[1] = 20;
+     public int arithmetic(){
+        A a;
+        int test;
+        a.foo();
+        a = new Simple();
+        A.foo();
+        test = A.test(A.testing());
+        test = A.foo();
+        return 10;
     }
-
-    int foo() {
-        return io.foo();
-    }
-
 }
