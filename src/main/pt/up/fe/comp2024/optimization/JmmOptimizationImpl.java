@@ -19,7 +19,12 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
-
+        boolean optimize1 = ollirResult.getConfig().containsKey("optimize");
+        if(optimize1){
+            if(ollirResult.getConfig().get("optimize").equals("true")){
+                //TODO OPTIMIZE HERE
+            }
+        }
         //TODO: Do your OLLIR-based optimizations here
 
         return ollirResult;
