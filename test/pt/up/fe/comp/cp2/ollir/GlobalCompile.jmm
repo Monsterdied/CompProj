@@ -4,13 +4,7 @@ import A;
 class Simple extends A{
 
      public int arithmetic(){
-        A a;
-        int test;
-        a.foo();
-        a = new Simple();
-        A.foo();
-        test = A.test(A.testing());
-        test = A.foo();
-        return 10;
+        int a;
+        a = 1 + a;
     }
 }
