@@ -177,6 +177,18 @@ public class Cpf5_Optimizations {
 
         CpUtils.matches(optimized, "(bipush|sipush|ldc) 10\\s+ireturn");
     }
+    @Test
+    public void section3_Constant_Folding() {
+
+        String filename = "const_prop/ConstantFolding.jmm";
+
+        JasminResult original = getJasminResult(filename);
+        JasminResult optimized = getJasminResultOpt(filename);
+
+        CpUtils.assertNotEquals("Expected code to change with -o flag\n\nOriginal code:\n" + original.getJasminCode(),
+                original.getJasminCode(), optimized.getJasminCode(),
+                optimized);
+    }
 
 
     @Test

@@ -1,0 +1,12 @@
+class PropSimple {
+    public int foo(){
+	  int a;
+	  int b;
+	  b = 2;
+	  a = 10 + 2;
+	  return a;
+	}
+    public static void main(String[] args) {
+
+    }
+}
