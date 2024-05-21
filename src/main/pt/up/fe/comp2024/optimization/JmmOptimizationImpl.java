@@ -12,6 +12,27 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult toOllir(JmmSemanticsResult semanticsResult) {
+        boolean optimize1 = semanticsResult.getConfig().containsKey("optimize");
+        //Jmm optimization
+        if(optimize1){
+            //TODO OPTIMIZE HERE
+            if(semanticsResult.getConfig().get("optimize").equals("true")){
+                boolean optimized = false;
+                ConstantFold constantFold = new ConstantFold();
+                constantFold.buildVisitor();
+
+                do {
+                    constantFold.setOptimized(false);
+                    constantFold.setRootNode(semanticsResult.getRootNode());
+                    constantFold.run();
+                    optimized = constantFold.isOptimized();
+                } while (optimized);
+
+                //TODO OPTIMIZE HERE
+            }
+        }
+
+
 
         var visitor = new OllirGeneratorVisitor(semanticsResult.getSymbolTable());
         var ollirCode = visitor.visit(semanticsResult.getRootNode());
@@ -26,17 +47,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
         method.buildCFG();
 
         if(optimize1){
-            if(ollirResult.getConfig().get("optimize").equals("true")){
-                boolean optimized = false;
-                ConstantFold constantFold = new ConstantFold();
-                do {
 
-                    constantFold.run(ollirResult.getOllirClass());
-                    optimized = constantFold.isOptimized();
-                } while (optimized);
-
-                //TODO OPTIMIZE HERE
-            }
         }
         //TODO: Do your OLLIR-based optimizations here
 
