@@ -6,7 +6,7 @@ import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
 import static pt.up.fe.comp2024.ast.Kind.BINARY_EXPR;
 
-public class ConstantFold extends AJmmVisitor<Void,Void> {
+public class ConstantPorpagation  extends AJmmVisitor<Void,Void> {
     private JmmNode rootNode;
     private boolean optimized = false;
 
@@ -43,7 +43,7 @@ public class ConstantFold extends AJmmVisitor<Void,Void> {
             }
             visit(node1);
         }
-    return unused;
+        return unused;
     }
     public Void dealWithBinnaryOp(JmmNode node , Void unused){
         visit(node.getChildren().get(0));
@@ -81,5 +81,4 @@ public class ConstantFold extends AJmmVisitor<Void,Void> {
     public void run(){
         visit(rootNode);
     }
-
 }
