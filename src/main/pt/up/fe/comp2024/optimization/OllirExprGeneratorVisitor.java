@@ -175,7 +175,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             return new OllirExprResult(code.toString(), computation);
         }
         if(isStatic){
-                code.append(").V").append(END_STMT);
+            code.append(").V").append(END_STMT);
         }
         else{
             if(table.getMethods().contains(nodeMethodCall.get("name"))){
@@ -346,6 +346,36 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     .append(code).append(END_STMT);
 
             return new OllirExprResult(code2,computation.toString());
+        }
+        try {
+            if (node.getParent().isInstance(ASSIGN_STMT)) {
+                var cond1 = node.getJmmChild(0).isInstance(VAR_REF_EXPR) && node.getJmmChild(1).isInstance(INTEGER_LITERAL);
+                var cond2 = node.getJmmChild(0).isInstance(INTEGER_LITERAL) && node.getJmmChild(1).isInstance(VAR_REF_EXPR);
+                if (cond1) {
+                    if (node.getJmmChild(0).get("name").equals(node.getParent().getJmmChild(0).get("name"))) {
+                        StringBuilder codespecial = new StringBuilder();
+                        Type resType = TypeUtils.getExprType(node, table);
+                        String resOllirType = OptUtils.toOllirType(resType);
+                        codespecial.append(visit(node.getJmmChild(0)).getCode()).append(SPACE)
+                                .append(node.get("op")).append(resOllirType).append(SPACE)
+                                .append(visit(node.getJmmChild(1)).getCode()).append(END_STMT);
+                        return new OllirExprResult(codespecial.toString());
+                    }
+                }
+                if(cond2){
+                    if (node.getJmmChild(1).get("name").equals(node.getParent().getJmmChild(0).get("name"))) {
+                        StringBuilder codespecial = new StringBuilder();
+                        Type resType = TypeUtils.getExprType(node, table);
+                        String resOllirType = OptUtils.toOllirType(resType);
+                        codespecial.append(visit(node.getJmmChild(0)).getCode()).append(SPACE)
+                                .append(node.get("op")).append(resOllirType).append(SPACE)
+                                .append(visit(node.getJmmChild(1)).getCode()).append(END_STMT);
+                        return new OllirExprResult(codespecial.toString());
+                    }
+                }
+            }
+        } catch (Exception e) {
+
         }
 
         Type resType = TypeUtils.getExprType(node, table);
