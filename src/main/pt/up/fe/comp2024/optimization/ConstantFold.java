@@ -4,6 +4,9 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import static pt.up.fe.comp2024.ast.Kind.BINARY_EXPR;
 
 public class ConstantFold extends AJmmVisitor<Void,Void> {
@@ -38,9 +41,6 @@ public class ConstantFold extends AJmmVisitor<Void,Void> {
     }
     public Void defaultVisitor(JmmNode node , Void unused){
         for(JmmNode node1 : node.getChildren()){
-            if(node1.getKind().equals("BinaryExpr")){
-                var test = "ok";
-            }
             visit(node1);
         }
     return unused;
@@ -50,6 +50,10 @@ public class ConstantFold extends AJmmVisitor<Void,Void> {
         visit(node.getChildren().get(1));
         JmmNode left = node.getChildren().get(0);
         JmmNode right = node.getChildren().get(1);
+        ArrayList<String> operators = new ArrayList<>(Arrays.asList("+","-","*","/"));
+        if(! operators.contains(node.get("op")) ){
+            return unused;
+        }
         if(left.getKind().equals("IntegerLiteral") && right.getKind().equals("IntegerLiteral")){
             int leftValue = Integer.parseInt(left.get("value"));
             int rightValue = Integer.parseInt(right.get("value"));

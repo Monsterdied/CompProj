@@ -17,23 +17,32 @@ public class JmmOptimizationImpl implements JmmOptimization {
         if(optimize1){
             //TODO OPTIMIZE HERE
             if(semanticsResult.getConfig().get("optimize").equals("true")){
-                boolean optimized = false;
+                boolean optimizedFold = false;
+                boolean optimizedProp = false;
                 ConstantFold constantFold = new ConstantFold();
                 constantFold.buildVisitor();
+                ConstantPropagation constantPropagation = new ConstantPropagation();
+                constantPropagation.buildVisitor();
 
                 do {
                     constantFold.setOptimized(false);
                     constantFold.setRootNode(semanticsResult.getRootNode());
                     constantFold.run();
-                    optimized = constantFold.isOptimized();
-                } while (optimized);
+                    optimizedFold = constantFold.isOptimized();
+                    constantPropagation.setOptimized(false);
+                    constantPropagation.setRootNode(semanticsResult.getRootNode());
+                    constantPropagation.run();
+                    optimizedProp = constantPropagation.isOptimized();
+                    String checker = semanticsResult.getRootNode().toTree();
+                    var delete = ";";
+
+                } while (optimizedFold || optimizedProp);
 
                 //TODO OPTIMIZE HERE
             }
         }
 
-
-
+        String checker = semanticsResult.getRootNode().toTree();
         var visitor = new OllirGeneratorVisitor(semanticsResult.getSymbolTable());
         var ollirCode = visitor.visit(semanticsResult.getRootNode());
 
