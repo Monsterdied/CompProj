@@ -203,10 +203,11 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         var resOllirType = node.get("name");
-        var tempVar = OptUtils.getTemp() + "." +resOllirType;
-        computation.append(tempVar).append(SPACE).append(ASSIGN).append(".").append(resOllirType).append(SPACE).append("new(").append(resOllirType).append(")").append(".").append(resOllirType).append(END_STMT);
-        computation.append(String.format("invokespecial(%s, \"<init>\").V", tempVar)).append(END_STMT);
-        code.append(tempVar);
+        var variableAssigned = node.getAncestor("AssignStmt").get().getJmmChild(0);
+        var variableAssignedcode = visit(variableAssigned).getCode();
+        code.append("new(").append(resOllirType).append(")").append(".").append(resOllirType).append(END_STMT);
+        code.append(String.format("invokespecial(%s, \"<init>\").V", variableAssignedcode)).append(END_STMT);
+
         return new OllirExprResult(code.toString(),computation.toString());
     }
 
