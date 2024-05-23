@@ -203,11 +203,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         var resOllirType = node.get("name");
-        var variableAssigned = node.getAncestor("AssignStmt").get().getJmmChild(0);
-        var variableAssignedcode = visit(variableAssigned).getCode();
-        code.append("new(").append(resOllirType).append(")").append(".").append(resOllirType).append(END_STMT);
-        code.append(String.format("invokespecial(%s, \"<init>\").V", variableAssignedcode)).append(END_STMT);
-
+        var tempVar = OptUtils.getTemp() + "." +resOllirType;
+        computation.append(tempVar).append(SPACE).append(ASSIGN).append(".").append(resOllirType).append(SPACE).append("new(").append(resOllirType).append(")").append(".").append(resOllirType).append(END_STMT);
+        computation.append(String.format("invokespecial(%s, \"<init>\").V", tempVar)).append(END_STMT);
+        code.append(tempVar);
         return new OllirExprResult(code.toString(),computation.toString());
     }
 
@@ -250,9 +249,22 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     if (node.getParent().getKind().equals("AssignStmt")) {
                         String name = node.get("name");
                         String type = OptUtils.toOllirType(field.getType().getName());
-                        var computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
-                        code = String.format("putfield(this, %s, %s).V;", name + type, computation.getCode());
-                        return new OllirExprResult(computation.getComputation(), code);
+                        OllirExprResult computation;
+                        if(node.getParent().getJmmChild(0).get("name").equals(name)){
+                            computation = visit(node.getAncestor("AssignStmt").orElseThrow().getChild(1));
+                            code = String.format("putfield(this, %s, %s).V;", name + type, computation.getCode());
+                            return new OllirExprResult(computation.getComputation(), code);
+                        }
+                        else{
+                            Type fieldType = TypeUtils.getExprType(node, table);
+                            String fieldOllirType = OptUtils.toOllirType(fieldType);
+                            String tempVar = OptUtils.getTemp() + fieldOllirType;
+                            String fieldName = node.get("name");
+
+                            code = tempVar + SPACE + ASSIGN + fieldOllirType + SPACE + String.format("getfield(this, %s)", fieldName + fieldOllirType) + fieldOllirType + END_STMT;
+                            return new OllirExprResult(tempVar, code);
+                        }
+
                     } else {
                         Type fieldType = TypeUtils.getExprType(node, table);
                         String fieldOllirType = OptUtils.toOllirType(fieldType);

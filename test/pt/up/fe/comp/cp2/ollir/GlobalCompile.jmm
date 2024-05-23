@@ -1,16 +1,18 @@
-import ioPlus;
-class ArrayAsArg {
-
-    public int func(int[] a)
-    {
-        int x;
-        int[] arr;
-        ArrayAsArg c;
-
-		c = new ArrayAsArg();
-        arr = new int[2];
-        x = c.func(arr);
-        return x;
+import io;
+class RegAlloc {
+    int test;
+    public int soManyRegisters(int arg){
+       int a;
+       int b;
+       int c;
+       int d;
+       a = 0;
+       b = a;
+       c = b;
+       d = c;
+       test = 0;
+       a = test;
+       return d;
     }
 
 

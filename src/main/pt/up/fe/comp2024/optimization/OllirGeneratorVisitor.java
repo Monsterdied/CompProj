@@ -344,7 +344,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         var blockStmt2 = node.getJmmChild(0).getJmmChild(2);
         for(var child: blockStmt2.getChildren()){
-            code.append(visit(child));
+            var stmt = visit(child);
+            code.append(stmt);
         }
         code.append(String.format("goto end%s;",ifcondition)).append(NL);
 
