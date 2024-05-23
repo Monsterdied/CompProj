@@ -1,8 +1,6 @@
 package pt.up.fe.comp2024.optimization;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.Descriptor;
-import org.specs.comp.ollir.Method;
+import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.Ollir;
 import org.specs.comp.ollir.OllirErrorException;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
@@ -11,6 +9,8 @@ import pt.up.fe.comp.jmm.ollir.OllirResult;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class JmmOptimizationImpl implements JmmOptimization {
 
@@ -65,6 +65,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
                 DataFlowAnalysis dataFlowAnalysis = new DataFlowAnalysis(method);
                 dataFlowAnalysis.run();
+
+                Map<Instruction, Set<Operand>> in = dataFlowAnalysis.getIn();
+                Map<Instruction, Set<Operand>> out = dataFlowAnalysis.getOut();
 
                 HashMap<String, Descriptor> old_varTable = method.getVarTable();
 

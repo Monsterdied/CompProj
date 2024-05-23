@@ -31,7 +31,7 @@ public class DataFlowAnalysis {
         }
 
         boolean stable = false;
-/*
+
         while (!stable) {
             Stack<Instruction> stack = new Stack<>();
             for (Node pred : method.getEndNode().getPredecessors()) {
@@ -42,11 +42,12 @@ public class DataFlowAnalysis {
             Arrays.fill(isVisited, false);
 
             while (!stack.isEmpty()) {
+                boolean changed = false;
                 Instruction instruction = stack.pop();
                 isVisited[instruction.getId()] = true;
 
                 for (Node predecessor : instruction.getPredecessors()) {
-                    if (!isVisited[predecessor.getId()] || !stack.contains(predecessor) || predecessor.getId() != 0) {
+                    if (!isVisited[predecessor.getId()] && !stack.contains(predecessor) && predecessor.getId() != 0) {
                         stack.push((Instruction) predecessor);
                     }
                 }
@@ -56,7 +57,7 @@ public class DataFlowAnalysis {
                 }
 
                 Set<Operand> inSet = new HashSet<>();
-                Set<Operand> outSet = new HashSet<>();
+                Set<Operand> outSet = new HashSet<>(out.get(instruction));
 
                 // OUT(B) = ∪ IN(s)
                 for (Node successor : instruction.getSuccessors()) {
@@ -72,12 +73,12 @@ public class DataFlowAnalysis {
                 inTmp.removeAll(def.get(instruction));
                 inSet.addAll(inTmp);
 
-                stable = in.equals(inSet) && out.equals(outSet);
+                //stable = in.get(instruction).equals(inSet) && out.get(instruction).equals(outSet);
 
                 in.put(instruction, inSet);
                 out.put(instruction, outSet);
             }
-        }*/
+        }
     }
 
     private Set<Operand> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
@@ -168,6 +169,14 @@ public class DataFlowAnalysis {
         /*if(instruction.getSingleOperand() instanceof Operand)
             return Set.of((Operand) instruction.getSingleOperand());*/
         return new HashSet<>();
+    }
+
+    public Map<Instruction, Set<Operand>> getIn() {
+        return in;
+    }
+
+    public Map<Instruction, Set<Operand>> getOut() {
+        return out;
     }
 }
 
