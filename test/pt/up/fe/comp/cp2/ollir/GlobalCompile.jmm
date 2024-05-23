@@ -1,17 +1,19 @@
 import io;
-
-class VarargsAndArrayInit {
-
-    public static void main(String[] args) {
-        int[] b;
-        int a;
-        b = [1,2,3,4,5];
-        a = b[1];
-        b[1] = 20;
+class RegAlloc {
+    int test;
+    public int soManyRegisters(int arg){
+       int a;
+       int b;
+       int c;
+       int d;
+       a = 0;
+       b = a;
+       c = b;
+       d = c;
+       test = 0;
+       a = test;
+       return d;
     }
 
-    int foo() {
-        return io.foo();
-    }
 
 }
