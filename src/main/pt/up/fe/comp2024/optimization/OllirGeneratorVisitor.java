@@ -245,13 +245,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // code to compute self
         String tempVar = "";
-        if(rhs_node.isInstance(METHOD_CALL_EXPR)){
-            Type resType = TypeUtils.getExprType(node.getChildren(VAR_REF_EXPR).get(0), table);
-            String resOllirType = OptUtils.toOllirType(resType);
-            tempVar = OptUtils.getTemp() + resOllirType;
-            code.append(tempVar).append(SPACE).append(ASSIGN).append(resOllirType).append(SPACE).append(rhs.getCode());
 
-        }
 
         // statement has type of lhs
         Type thisType = TypeUtils.getExprType(node.getJmmChild(0), table);
@@ -265,12 +259,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(typeString);
         code.append(SPACE);
 
-        if(rhs_node.isInstance(METHOD_CALL_EXPR)){
-            code.append(tempVar).append(END_STMT);
-        }
-        else{
-            code.append(rhs.getCode());
-        }
+
+        code.append(rhs.getCode());
 
 
         if(!rhs.getCode().contains(";")){
