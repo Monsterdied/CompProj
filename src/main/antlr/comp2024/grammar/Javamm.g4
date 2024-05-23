@@ -132,8 +132,8 @@ expr
     | name=ID LPAREN args? RPAREN #MethodCallExpr
     | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     | expr '.' 'length' #ArrayLengthExpr
-    | expr op=(AND | OR) expr #BinaryExpr
     | expr op=(LT | LE | GT | GE) expr #BinaryExpr
+    | expr op=(AND | OR) expr #BinaryExpr
     | expr op=(MUL | DIV) expr #BinaryExpr
     | expr op=(ADD | SUB) expr #BinaryExpr
     | value=INTEGER #IntegerLiteral
