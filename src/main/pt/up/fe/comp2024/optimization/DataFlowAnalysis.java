@@ -25,13 +25,13 @@ public class DataFlowAnalysis {
 
         for (Instruction instruction : instructions) {
             def.put(instruction, computeDef(instruction, method.getVarTable()));
-            //use.put(instruction, computeUse(instruction, method.getVarTable()));
+            use.put(instruction, computeUse(instruction));
             in.put(instruction, new HashSet<>());
             out.put(instruction, new HashSet<>());
         }
 
         boolean stable = false;
-
+/*
         while (!stable) {
             Stack<Node> stack = new Stack<>();
             stack.push(method.getEndNode());
@@ -63,7 +63,7 @@ public class DataFlowAnalysis {
                     }
                 }
             }
-        }
+        }*/
     }
 
     private Set<Operand> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
@@ -86,8 +86,7 @@ public class DataFlowAnalysis {
 
     private Set<Operand> computeUse(Instruction instruction) {
         Set<Operand> use = new HashSet<>();
-        return use;
-        /*switch (instruction.getInstType()) {
+        switch (instruction.getInstType()) {
             case ASSIGN:
                 use.addAll(assignUses((AssignInstruction) instruction));
                 break;
@@ -95,16 +94,27 @@ public class DataFlowAnalysis {
                 use.addAll(callUses((CallInstruction) instruction));
                 break;
             case BINARYOPER:
-                //use.addAll(binaryOperUses((BinaryOperInstruction) instruction));
+                use.addAll(binaryOperUses((BinaryOpInstruction) instruction));
+                break;
+            case BRANCH:
+                use.addAll(branchOpUses((SingleOpCondInstruction) instruction));
+                break;
+            case RETURN:
+                use.addAll(returnUses((ReturnInstruction) instruction));
+                break;
+            /*case PUTFIELD ->*/
+            /*case GETFIELD:
+                use.addAll(getFieldUses( instruction));
                 break;*/
-            /*case BRANCH ->
-            case RETURN ->
-            case PUTFIELD ->
-            case GETFIELD ->
-            case UNARYOPER ->
-            case NOPER ->
-        }*/
-        //return use;
+            case UNARYOPER:
+                use.addAll(noperUses((SingleOpInstruction) instruction));
+                break;
+            case NOPER:
+                use.addAll(noperUses((SingleOpInstruction) instruction));
+                break;
+
+        }
+        return use;
     }
     private Set<Operand> assignUses(AssignInstruction assignInstruction) {
         return computeUse(assignInstruction.getRhs());
@@ -119,9 +129,31 @@ public class DataFlowAnalysis {
     }
     private Set<Operand> binaryOperUses(BinaryOpInstruction binaryOperInstruction) {
         Set<Operand> use = new HashSet<>();
-        //use.addAll(computeUse(binaryOperInstruction.getLhs()));
-        //use.addAll(computeUse(binaryOperInstruction.getRhs()));
+
+        if(binaryOperInstruction.getLeftOperand() instanceof Operand)
+            use.add((Operand) binaryOperInstruction.getLeftOperand());
+        if(binaryOperInstruction.getRightOperand() instanceof Operand)
+            use.add((Operand) binaryOperInstruction.getRightOperand());
         return use;
+    }
+    private Set<Operand> branchOpUses(SingleOpCondInstruction Branch) {
+        return computeUse(Branch.getCondition());
+    }
+    private Set<Operand> returnUses(ReturnInstruction returnInstruction) {
+        Set<Operand> use = new HashSet<>();
+        if(returnInstruction.getOperand() instanceof Operand)
+            use.add((Operand) returnInstruction.getOperand());
+        return use;
+    }
+    private Set<Operand> noperUses(SingleOpInstruction instruction) {
+        if(instruction.getSingleOperand() instanceof Operand)
+            return Set.of((Operand) instruction.getSingleOperand());
+        return new HashSet<>();
+    }
+    private Set<Operand> getFieldUses(Instruction instruction) {
+        /*if(instruction.getSingleOperand() instanceof Operand)
+            return Set.of((Operand) instruction.getSingleOperand());*/
+        return new HashSet<>();
     }
 }
 
