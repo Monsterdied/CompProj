@@ -7,10 +7,10 @@ import java.util.*;
 public class DataFlowAnalysis {
 
     private Method method;
-    private Map<Node, Set<Operand>> def;
-    private Map<Node, Set<Operand>> use;
-    private Map<Node, Set<Operand>> in;
-    private Map<Node, Set<Operand>> out;
+    private Map<Instruction, Set<Operand>> def;
+    private Map<Instruction, Set<Operand>> use;
+    private Map<Instruction, Set<Operand>> in;
+    private Map<Instruction, Set<Operand>> out;
 
     public DataFlowAnalysis(Method method) {
         this.method = method;
@@ -25,7 +25,7 @@ public class DataFlowAnalysis {
 
         for (Instruction instruction : instructions) {
             def.put(instruction, computeDef(instruction, method.getVarTable()));
-            //use.put(instruction, computeUse(instruction, method.getVarTable()));
+            use.put(instruction, computeUse(instruction));
             in.put(instruction, new HashSet<>());
             out.put(instruction, new HashSet<>());
         }
@@ -33,35 +33,49 @@ public class DataFlowAnalysis {
         boolean stable = false;
 
         while (!stable) {
-            Stack<Node> stack = new Stack<>();
-            stack.push(method.getEndNode());
+            Stack<Instruction> stack = new Stack<>();
+            for (Node pred : method.getEndNode().getPredecessors()) {
+                stack.push((Instruction) pred);
+            }
+
             boolean isVisited[] = new boolean[instructions.size() + 1];
             Arrays.fill(isVisited, false);
 
             while (!stack.isEmpty()) {
-                Node node = stack.pop();
-                isVisited[node.getId()] = true;
+                Instruction instruction = stack.pop();
+                isVisited[instruction.getId()] = true;
 
-                List<Operand> inSet = new ArrayList<>();
-                List<Operand> outSet = new ArrayList<>();
+                for (Node predecessor : instruction.getPredecessors()) {
+                    if (!isVisited[predecessor.getId()] || !stack.contains(predecessor) || predecessor.getId() != 0) {
+                        stack.push((Instruction) predecessor);
+                    }
+                }
+
+                if (instruction.getId() == 0) { // If END node or BEGIN node
+                    continue;
+                }
+
+                Set<Operand> inSet = new HashSet<>();
+                Set<Operand> outSet = new HashSet<>();
 
                 // OUT(B) = ∪ IN(s)
-                for (Node successor : node.getSuccessors()) {
-                    outSet.addAll(in.get(successor));
+                for (Node successor : instruction.getSuccessors()) {
+                    if (successor.getId() != 0) { // If not BEGIN or END node
+                        outSet.addAll(in.get((Instruction) successor));
+                    }
                 }
 
                 // IN(B) = Use(B) ∪ (OUT(B) - Def(B))
-                inSet.addAll(use.get(node));
+                inSet.addAll(use.get(instruction));
                 List<Operand> inTmp = new ArrayList<>();
-                inTmp.addAll(out.get(node));
-                inTmp.removeAll(def.get(node));
+                inTmp.addAll(out.get(instruction));
+                inTmp.removeAll(def.get(instruction));
                 inSet.addAll(inTmp);
 
-                for (Node predecessor : node.getPredecessors()) {
-                    if (!isVisited[predecessor.getId()]) {
-                        stack.push(predecessor);
-                    }
-                }
+                stable = in.equals(inSet) && out.equals(outSet);
+
+                in.put(instruction, inSet);
+                out.put(instruction, outSet);
             }
         }
     }
