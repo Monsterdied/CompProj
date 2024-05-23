@@ -1,19 +1,15 @@
 import io;
-class RegAlloc {
-    int test;
-    public int soManyRegisters(int arg){
-       int a;
-       int b;
-       int c;
-       int d;
-       a = 0;
-       b = a;
-       c = b;
-       d = c;
-       test = 0;
-       a = test;
-       return d;
-    }
+class IfElseInMain {
 
+
+    public static void main(String[] args){
+        boolean cond;
+        cond = 20 < 40;
+        if(cond){
+          io.println(10);
+        } else {
+          io.println(20);
+        }
+    }
 
 }
