@@ -2,10 +2,7 @@ package pt.up.fe.comp2024.optimization;
 
 import org.specs.comp.ollir.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DataFlowAnalysis {
 
@@ -24,12 +21,20 @@ public class DataFlowAnalysis {
     }
 
     public void run() {
+        List<Instruction> instructions = method.getInstructions();
+        //instructions = Collections.reverse(instructions.clone());
 
-        for (Instruction instruction : method.getInstructions()) {
+        for (Instruction instruction : instructions) {
             def.put(instruction, computeDef(instruction, method.getVarTable()));
             //use.put(instruction, computeUse(instruction, method.getVarTable()));
-
+            in.put(instruction, new ArrayList<>());
+            out.put(instruction, new ArrayList<>());
         }
+
+        /*boolean stable = false;
+        while (!stable) {
+
+        }*/
     }
 
     private List<Operand> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
