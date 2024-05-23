@@ -266,7 +266,17 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if(!rhs.getCode().contains(";")){
             code.append(END_STMT);
         }
+        var children = rhs_node.getDescendants();
+        if(rhs_node.isInstance(NEW_CLASS_EXPR)){
+            code.append(String.format("invokespecial(%s, \"<init>\").V", lhs.getCode())).append(END_STMT);
 
+        }
+        for(var child:children){
+            if(child.isInstance(NEW_CLASS_EXPR)){
+                code.append(String.format("invokespecial(%s, \"<init>\").V", lhs.getCode())).append(END_STMT);
+                break;
+            }
+        }
 
         return code.toString();
     }
