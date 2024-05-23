@@ -66,11 +66,11 @@ public class JmmOptimizationImpl implements JmmOptimization {
                 DataFlowAnalysis dataFlowAnalysis = new DataFlowAnalysis(method);
                 dataFlowAnalysis.run();
 
-                Map<Instruction, Set<Operand>> in = dataFlowAnalysis.getIn();
-                Map<Instruction, Set<Operand>> out = dataFlowAnalysis.getOut();
+                Map<Instruction, Set<String>> in = dataFlowAnalysis.getIn();
+                Map<Instruction, Set<String>> out = dataFlowAnalysis.getOut();
 
-                HashMap<String, Descriptor> old_varTable = method.getVarTable();
-
+                Graph graph = new Graph(in, out, method);
+                graph.run();
 
 
                 System.out.println("Hello world");

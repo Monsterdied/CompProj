@@ -7,10 +7,10 @@ import java.util.*;
 public class DataFlowAnalysis {
 
     private Method method;
-    private Map<Instruction, Set<Operand>> def;
-    private Map<Instruction, Set<Operand>> use;
-    private Map<Instruction, Set<Operand>> in;
-    private Map<Instruction, Set<Operand>> out;
+    private Map<Instruction, Set<String>> def;
+    private Map<Instruction, Set<String>> use;
+    private Map<Instruction, Set<String>> in;
+    private Map<Instruction, Set<String>> out;
 
     public DataFlowAnalysis(Method method) {
         this.method = method;
@@ -33,6 +33,7 @@ public class DataFlowAnalysis {
         boolean stable = false;
 
         while (!stable) {
+            stable = true;
             Stack<Instruction> stack = new Stack<>();
             for (Node pred : method.getEndNode().getPredecessors()) {
                 stack.push((Instruction) pred);
@@ -42,7 +43,6 @@ public class DataFlowAnalysis {
             Arrays.fill(isVisited, false);
 
             while (!stack.isEmpty()) {
-                boolean changed = false;
                 Instruction instruction = stack.pop();
                 isVisited[instruction.getId()] = true;
 
@@ -56,24 +56,28 @@ public class DataFlowAnalysis {
                     continue;
                 }
 
-                Set<Operand> inSet = new HashSet<>();
-                Set<Operand> outSet = new HashSet<>(out.get(instruction));
+                Set<String> inSet = new HashSet<>();
+                Set<String> outSet = new HashSet<>(out.get(instruction));
 
                 // OUT(B) = ∪ IN(s)
                 for (Node successor : instruction.getSuccessors()) {
                     if (successor.getId() != 0) { // If not BEGIN or END node
-                        outSet.addAll(in.get((Instruction) successor));
+                        Set<String> tmpOutSet = new HashSet<>(in.get((Instruction) successor));
+                        outSet.addAll(tmpOutSet);
                     }
                 }
 
                 // IN(B) = Use(B) ∪ (OUT(B) - Def(B))
-                inSet.addAll(use.get(instruction));
-                List<Operand> inTmp = new ArrayList<>();
-                inTmp.addAll(out.get(instruction));
-                inTmp.removeAll(def.get(instruction));
-                inSet.addAll(inTmp);
+                Set<String> useSet = new HashSet<>(use.get(instruction));
+                Set<String> defSet = new HashSet<>(def.get(instruction));
 
-                //stable = in.get(instruction).equals(inSet) && out.get(instruction).equals(outSet);
+                inSet.addAll(outSet);
+                inSet.removeAll(defSet);
+                inSet.addAll(useSet);
+
+                if (!in.get(instruction).equals(inSet) || !out.get(instruction).equals(outSet)) {
+                    stable = false;
+                }
 
                 in.put(instruction, inSet);
                 out.put(instruction, outSet);
@@ -81,8 +85,8 @@ public class DataFlowAnalysis {
         }
     }
 
-    private Set<Operand> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
-        Set<Operand> def = new HashSet<>();
+    private Set<String> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
+        Set<String> def = new HashSet<>();
 
         if (instruction.getInstType() == instruction.getInstType().ASSIGN) {
             AssignInstruction assignInstruction = (AssignInstruction) instruction;
@@ -93,14 +97,14 @@ public class DataFlowAnalysis {
                 return null;
             }
 
-            def.add((Operand) dest);
+            def.add(((Operand) dest).getName());
         }
 
         return def;
     }
 
-    private Set<Operand> computeUse(Instruction instruction) {
-        Set<Operand> use = new HashSet<>();
+    private Set<String> computeUse(Instruction instruction) {
+        Set<String> use = new HashSet<>();
         switch (instruction.getInstType()) {
             case ASSIGN:
                 use.addAll(assignUses((AssignInstruction) instruction));
@@ -171,11 +175,11 @@ public class DataFlowAnalysis {
         return new HashSet<>();
     }
 
-    public Map<Instruction, Set<Operand>> getIn() {
+    public Map<Instruction, Set<String>> getIn() {
         return in;
     }
 
-    public Map<Instruction, Set<Operand>> getOut() {
+    public Map<Instruction, Set<String>> getOut() {
         return out;
     }
 }
