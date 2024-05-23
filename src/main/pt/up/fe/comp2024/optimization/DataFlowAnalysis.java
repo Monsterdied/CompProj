@@ -85,6 +85,7 @@ public class DataFlowAnalysis {
         }
     }
 
+
     private Set<String> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
         Set<String> def = new HashSet<>();
 
@@ -135,41 +136,41 @@ public class DataFlowAnalysis {
         }
         return use;
     }
-    private Set<Operand> assignUses(AssignInstruction assignInstruction) {
+    private Set<String> assignUses(AssignInstruction assignInstruction) {
         return computeUse(assignInstruction.getRhs());
     }
-    private Set<Operand> callUses(CallInstruction callInstruction) {
-        Set<Operand> use = new HashSet<>();
+    private Set<String> callUses(CallInstruction callInstruction) {
+        Set<String> use = new HashSet<>();
         for (Element arg : callInstruction.getArguments()) {
             if(arg instanceof Operand)
-                use.add((Operand) arg);
+                use.add(((Operand) arg).getName());
         }
         return use;
     }
-    private Set<Operand> binaryOperUses(BinaryOpInstruction binaryOperInstruction) {
-        Set<Operand> use = new HashSet<>();
+    private Set<String> binaryOperUses(BinaryOpInstruction binaryOperInstruction) {
+        Set<String> use = new HashSet<>();
 
         if(binaryOperInstruction.getLeftOperand() instanceof Operand)
-            use.add((Operand) binaryOperInstruction.getLeftOperand());
+            use.add(((Operand) binaryOperInstruction.getLeftOperand()).getName());
         if(binaryOperInstruction.getRightOperand() instanceof Operand)
-            use.add((Operand) binaryOperInstruction.getRightOperand());
+            use.add(((Operand) binaryOperInstruction.getRightOperand()).getName());
         return use;
     }
-    private Set<Operand> branchOpUses(SingleOpCondInstruction Branch) {
+    private Set<String> branchOpUses(SingleOpCondInstruction Branch) {
         return computeUse(Branch.getCondition());
     }
-    private Set<Operand> returnUses(ReturnInstruction returnInstruction) {
-        Set<Operand> use = new HashSet<>();
+    private Set<String> returnUses(ReturnInstruction returnInstruction) {
+        Set<String> use = new HashSet<>();
         if(returnInstruction.getOperand() instanceof Operand)
-            use.add((Operand) returnInstruction.getOperand());
+            use.add(((Operand) returnInstruction.getOperand()).getName());
         return use;
     }
-    private Set<Operand> noperUses(SingleOpInstruction instruction) {
+    private Set<String> noperUses(SingleOpInstruction instruction) {
         if(instruction.getSingleOperand() instanceof Operand)
-            return Set.of((Operand) instruction.getSingleOperand());
+            return Set.of(((Operand) instruction.getSingleOperand()).getName());
         return new HashSet<>();
     }
-    private Set<Operand> getFieldUses(Instruction instruction) {
+    private Set<String> getFieldUses(Instruction instruction) {
         /*if(instruction.getSingleOperand() instanceof Operand)
             return Set.of((Operand) instruction.getSingleOperand());*/
         return new HashSet<>();
