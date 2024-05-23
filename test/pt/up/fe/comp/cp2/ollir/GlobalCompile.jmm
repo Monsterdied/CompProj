@@ -9,7 +9,7 @@ class IfElseInMain {
 
     public int test(){
         int b;
-        if(50<10 && true){
+        if(50<10 && 50<20){
           a = 10;
         } else {
           b = a;

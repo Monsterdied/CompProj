@@ -127,26 +127,25 @@ whileStmt
     ;
 
 expr
-    : op=NOT expr #NotExpr
+    : LPAREN expr RPAREN #ParenExpr
+    | value=INTEGER #IntegerLiteral
+    | value=BOOLEAN_VALUE #BooleanLiteral
+    | name=(ID|'length'|'main') #VarRefExpr
+    | THIS  #ThisExpr
+    | LBRACK (expr (',' expr)*)? RBRACK #ArrayInitExpression
+    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
     | expr '.' name=(ID|'main') LPAREN args? RPAREN #MethodCallExpr
     | name=ID LPAREN args? RPAREN #MethodCallExpr
-    | expr LBRACK index=expr RBRACK #ArrayAccessExpr
-    | expr '.' 'length' #ArrayLengthExpr
-    | expr op=(LT | LE | GT | GE) expr #BinaryExpr
-    | expr op=(AND | OR) expr #BinaryExpr
-    | expr op=(MUL | DIV) expr #BinaryExpr
-    | expr op=(ADD | SUB) expr #BinaryExpr
-    | value=INTEGER #IntegerLiteral
-    | name=(ID|'length'|'main') #VarRefExpr
-    | LPAREN expr RPAREN #ParenExpr
-
-
-    | value=BOOLEAN_VALUE #BooleanLiteral
     | NEW type LBRACK expr RBRACK #NewArrayExpr
     | NEW name=(ID|'main') LPAREN RPAREN #NewClassExpr
-    | LBRACK (expr (',' expr)*)? RBRACK #ArrayInitExpression
-    | THIS  #ThisExpr
+    | expr '.' 'length' #ArrayLengthExpr
+    | expr op=(MUL | DIV) expr #BinaryExpr
+    | expr op=(ADD | SUB) expr #BinaryExpr
+    | op=NOT expr #NotExpr
+    | expr op=(LT | LE | GT | GE) expr #BinaryExpr
+    | expr op=(AND | OR) expr #BinaryExpr
     ;
+
 
 
 args
