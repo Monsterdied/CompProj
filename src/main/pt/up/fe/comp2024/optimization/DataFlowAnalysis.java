@@ -7,10 +7,10 @@ import java.util.*;
 public class DataFlowAnalysis {
 
     private Method method;
-    private Map<Node, List<Operand>> def;
-    private Map<Node, List<Operand>> use;
-    private Map<Node, List<Operand>> in;
-    private Map<Node, List<Operand>> out;
+    private Map<Node, Set<Operand>> def;
+    private Map<Node, Set<Operand>> use;
+    private Map<Node, Set<Operand>> in;
+    private Map<Node, Set<Operand>> out;
 
     public DataFlowAnalysis(Method method) {
         this.method = method;
@@ -22,23 +22,52 @@ public class DataFlowAnalysis {
 
     public void run() {
         List<Instruction> instructions = method.getInstructions();
-        //instructions = Collections.reverse(instructions.clone());
 
         for (Instruction instruction : instructions) {
             def.put(instruction, computeDef(instruction, method.getVarTable()));
             //use.put(instruction, computeUse(instruction, method.getVarTable()));
-            in.put(instruction, new ArrayList<>());
-            out.put(instruction, new ArrayList<>());
+            in.put(instruction, new HashSet<>());
+            out.put(instruction, new HashSet<>());
         }
 
-        /*boolean stable = false;
-        while (!stable) {
+        boolean stable = false;
 
-        }*/
+        while (!stable) {
+            Stack<Node> stack = new Stack<>();
+            stack.push(method.getEndNode());
+            boolean isVisited[] = new boolean[instructions.size() + 1];
+            Arrays.fill(isVisited, false);
+
+            while (!stack.isEmpty()) {
+                Node node = stack.pop();
+                isVisited[node.getId()] = true;
+
+                List<Operand> inSet = new ArrayList<>();
+                List<Operand> outSet = new ArrayList<>();
+
+                // OUT(B) = ∪ IN(s)
+                for (Node successor : node.getSuccessors()) {
+                    outSet.addAll(in.get(successor));
+                }
+
+                // IN(B) = Use(B) ∪ (OUT(B) - Def(B))
+                inSet.addAll(use.get(node));
+                List<Operand> inTmp = new ArrayList<>();
+                inTmp.addAll(out.get(node));
+                inTmp.removeAll(def.get(node));
+                inSet.addAll(inTmp);
+
+                for (Node predecessor : node.getPredecessors()) {
+                    if (!isVisited[predecessor.getId()]) {
+                        stack.push(predecessor);
+                    }
+                }
+            }
+        }
     }
 
-    private List<Operand> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
-        List<Operand> def = new ArrayList<>();
+    private Set<Operand> computeDef(Instruction instruction, Map<String, Descriptor> varTable) {
+        Set<Operand> def = new HashSet<>();
 
         if (instruction.getInstType() == instruction.getInstType().ASSIGN) {
             AssignInstruction assignInstruction = (AssignInstruction) instruction;
