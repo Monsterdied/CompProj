@@ -25,18 +25,6 @@ public class ConstantPropagation extends AJmmVisitor<Void,Void> {
         addVisit(WHILE_CONDITION, this::visitWhileStmt);
         addVisit(METHOD_DECL, this::visitMethod);
         addVisit(IF_ELSE_STMT, this::visitIfElseStmt);
-        /*addVisit(PAREN_EXPR,this::parenExprVisit);
-        addVisit(THIS_EXPR,this::visitThisExpr);
-        addVisit(METHOD_CALL_EXPR, this::visitMethodCall);
-        addVisit(NEW_CLASS_EXPR, this::visitNewClass);
-        addVisit(BINARY_EXPR, this::visitBinExpr);
-        addVisit(NOT_EXPR, this::visitNotExpr);
-        addVisit(INTEGER_LITERAL, this::visitInteger);
-        addVisit(BOOLEAN_LITERAL, this::visitBoolean);
-        addVisit(ARRAY_ACCESS_EXPR, this::visitVarRef);
-        addVisit(NEW_ARRAY_EXPR,this::visitNewArray);
-        addVisit(ARRAY_LENGTH_EXPR, this::visitArrayLength);
-        addVisit(ARRAY_INIT_EXPRESSION,this::visitArrayInit);*/
         setDefaultVisit(this::defaultVisitor);
     }
     public void setOptimized(boolean optimized){
