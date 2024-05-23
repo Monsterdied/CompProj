@@ -110,8 +110,8 @@ param
 stmt
     : expr EQUALS expr SEMI #AssignStmt
     | RETURN expr SEMI #ReturnStmt
-    | expr SEMI #ExprStmt
     | LCURLY stmt* RCURLY #BlockStmt
+    | expr SEMI #ExprStmt
     | ifStmt #IfElseStmt
     | whileStmt #WhileCondition
     ;

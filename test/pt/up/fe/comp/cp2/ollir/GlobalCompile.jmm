@@ -1,24 +1,22 @@
 import io;
-class IfElseInMain {
 
-    int a;
+class SimpleIfElseNot {
 
-    public boolean test2(int x){
-        return true;
-    }
 
-    public int test(){
-        int b;
-        if(50<10 && 50<20){
-          a = 10;
-        } else {
-          b = a;
+	public static void main(String[] args) {
+        int a;
+		if(true){
+			a = io.println(10) + 5;
+
+		else{
+			io.println(20);
+		}
+
+		if(false){
+			io.print(100);
+		}
+		else{
+			io.print(200);
         }
-        return a;
-    }
-
-    public static void main(String[] args){
-
-    }
-
+	}
 }
