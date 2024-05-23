@@ -3,9 +3,13 @@ class IfElseInMain {
 
     int a;
 
+    public boolean test2(int x){
+        return true;
+    }
+
     public int test(){
         int b;
-        if(true && false){
+        if(this.test2(5)){
           a = 10;
         } else {
           b = a;
