@@ -340,7 +340,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var conditionExprResult = exprVisitor.visit(conditionExpr);
         code.append(conditionExprResult.getComputation());
         var ifcondition = OptUtils.getIf();
+
         if(conditionExpr.isInstance(METHOD_CALL_EXPR)){
+
             Type resType = TypeUtils.getExprType(conditionExpr, table);
             String resOllirType = OptUtils.toOllirType(resType);
             String tmp =OptUtils.getTemp() + resOllirType;
@@ -348,8 +350,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                     .append(ASSIGN).append(resOllirType).append(SPACE)
                     .append(conditionExprResult.getCode());
             code.append(String.format("if (%s) goto %s;",tmp,ifcondition)).append(NL);
+
         }else{
+
             code.append(String.format("if (%s) goto %s;",conditionExprResult.getCode(),ifcondition)).append(NL);
+
         }
 
         var blockStmt2 = node.getJmmChild(0).getJmmChild(2);

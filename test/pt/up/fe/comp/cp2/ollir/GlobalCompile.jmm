@@ -9,7 +9,7 @@ class IfElseInMain {
 
     public int test(){
         int b;
-        if(this.test2(5)){
+        if(this.test2(5) && this.test2(10)){
           a = 10;
         } else {
           b = a;

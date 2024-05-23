@@ -493,7 +493,18 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         computation.append(conditionExprResult.getComputation());
 
-        computation.append(String.format("if (%s) goto %s;",conditionExprResult.getCode(),ifcondition)).append("\n");
+        if(node.getJmmChild(0).isInstance(METHOD_CALL_EXPR)){
+            Type resType = TypeUtils.getExprType(node.getJmmChild(0), table);
+            String resOllirType = OptUtils.toOllirType(resType);
+            String tmp =OptUtils.getTemp() + resOllirType;
+            computation.append(tmp).append(SPACE)
+                    .append(ASSIGN).append(resOllirType).append(SPACE)
+                    .append(conditionExprResult.getCode());
+            computation.append(String.format("if (%s) goto %s;",tmp,ifcondition)).append("\n");
+        }
+        else{
+            computation.append(String.format("if (%s) goto %s;",conditionExprResult.getCode(),ifcondition)).append("\n");
+        }
 
         var tempvar = OptUtils.getTemp();
 
