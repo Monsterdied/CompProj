@@ -563,7 +563,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             computation.append(vararg).append(String.format("[%s.i32].i32 :=.i32 %s;\n",j,visit(args.getChildren().get(j)).getCode()));
         }
 
-        code.append(tempVar);
+        code.append(vararg);
         return new OllirExprResult(code.toString(),computation.toString());
     }
 
