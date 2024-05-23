@@ -235,7 +235,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                 return new OllirExprResult(code,computation);
             }
             String computation = index.getComputation();
-            code = id + "[" + index.getCode() + "]" + OptUtils.toOllirType(TypeUtils.getExprType(node,table));
+            code = id + ".array.i32[" + index.getCode() + "]" + OptUtils.toOllirType(TypeUtils.getExprType(node,table));
             return new OllirExprResult(code, computation);
         }
 
