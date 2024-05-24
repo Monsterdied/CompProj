@@ -1,19 +1,22 @@
 import io;
-class RegAlloc {
-    int test;
-    public int soManyRegisters(int arg){
-       int a;
-       int b;
-       int c;
-       int d;
-       a = 0;
-       b = a;
-       c = b;
-       d = c;
-       test = 0;
-       a = test;
-       return d;
-    }
+
+class SimpleIfElseNot {
 
 
+	public static void main(String[] args) {
+        int a;
+		if(true){
+			a = io.println(10) + 5;
+
+		else{
+			io.println(20);
+		}
+
+		if(false){
+			io.print(100);
+		}
+		else{
+			io.print(200);
+        }
+	}
 }

@@ -292,6 +292,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         if(node.get("op").contains("&&")){
             return visitAndOperatorExpr(node,unused);
         }
+        /*if(node.get("op").contains("<")){
+            return visitLessOperatorExpr(node,unused);
+        }
+        */
         var lhs = visit(node.getJmmChild(0));
         var rhs = visit(node.getJmmChild(1));
 
@@ -489,7 +493,18 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         computation.append(conditionExprResult.getComputation());
 
-        computation.append(String.format("if (%s) goto %s;",conditionExprResult.getCode(),ifcondition)).append("\n");
+        if(node.getJmmChild(0).isInstance(METHOD_CALL_EXPR)){
+            Type resType = TypeUtils.getExprType(node.getJmmChild(0), table);
+            String resOllirType = OptUtils.toOllirType(resType);
+            String tmp =OptUtils.getTemp() + resOllirType;
+            computation.append(tmp).append(SPACE)
+                    .append(ASSIGN).append(resOllirType).append(SPACE)
+                    .append(conditionExprResult.getCode());
+            computation.append(String.format("if (%s) goto %s;",tmp,ifcondition)).append("\n");
+        }
+        else{
+            computation.append(String.format("if (%s) goto %s;",conditionExprResult.getCode(),ifcondition)).append("\n");
+        }
 
         var tempvar = OptUtils.getTemp();
 
@@ -504,7 +519,13 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         computation.append(rhs.getComputation());
 
         var tempvar2 = OptUtils.getTemp();
-        computation.append(tempvar2 + ".bool ").append(ASSIGN + ".bool ").append(rhs.getCode());
+        if(rhs.getCode().contains(";")){
+            computation.append(tempvar2 + ".bool ").append(ASSIGN + ".bool ").append(rhs.getCode());
+
+        }
+        else{
+            computation.append(tempvar2 + ".bool ").append(ASSIGN + ".bool ").append(rhs.getCode()).append(";\n");
+        }
         computation.append(tempvar + ".bool ").append(ASSIGN + ".bool ").append(tempvar2 + ".bool").append(";\n");
 
         computation.append(String.format("end%s:\n",ifcondition));
