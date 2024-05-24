@@ -37,10 +37,8 @@ public class Graph {
 
         addEdges(firstInsList);
         addEdges(out.values());
-
-        System.out.println("Hello world");
         if(nodes.isEmpty()){
-            System.out.println("Empty");
+            //System.out.println("Empty");
             return;
         }
         DSaturAlgorithm();
@@ -74,15 +72,20 @@ public class Graph {
         List<String> nodesList = new ArrayList<>(nodes);
         nodesList.sort(comparator);// to have the priority on the nodes with more connections
         HashMap<String,Integer> colors = new HashMap<>();// VarName -> Register
-        int i = 1;
+        Set<Integer> neighboorsColors = new HashSet<>();
         for(String node : nodesList){
-            i = 1;
+            neighboorsColors.clear();
             for(String neighbor : edges.get(node)){
-                if(colors.containsKey(neighbor) && colors.get(neighbor) == i){
-                        i++;
+                if(colors.containsKey(neighbor)){
+                    neighboorsColors.add(colors.get(neighbor));
                 }
             }
-            colors.put(node,i);
+            for(int i = 0; i < nodes.size(); i++) {
+                if (!neighboorsColors.contains(i)) {
+                    colors.put(node, i);
+                    break;
+                }
+            }
         }
         this.minReg = colors.values().stream().max(Integer::compareTo).get();
         for(String var : colors.keySet()){

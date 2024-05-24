@@ -122,8 +122,11 @@ public class DataFlowAnalysis {
             case RETURN:
                 use.addAll(returnUses((ReturnInstruction) instruction));
                 break;
-            /*case PUTFIELD ->*/
-            /*case GETFIELD:
+                /*
+            case PUTFIELD:
+                use.addAll(getFieldUses( instruction));
+                break;
+            case GETFIELD:
                 use.addAll(getFieldUses( instruction));
                 break;*/
             case UNARYOPER:
