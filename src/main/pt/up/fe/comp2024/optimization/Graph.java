@@ -35,7 +35,7 @@ public class Graph {
         Collection<Set<String>> firstInsList = new HashSet<>();
         firstInsList.add(firstIns);
 
-        addEdges(firstInsList);
+        addEdges(in.values());
         addEdges(out.values());
         if(nodes.isEmpty()){
             //System.out.println("Empty");
@@ -80,7 +80,7 @@ public class Graph {
                     neighboorsColors.add(colors.get(neighbor));
                 }
             }
-            for(int i = 0; i < nodes.size(); i++) {
+            for(int i = 0; i <= nodes.size(); i++) {
                 if (!neighboorsColors.contains(i)) {
                     colors.put(node, i);
                     break;
