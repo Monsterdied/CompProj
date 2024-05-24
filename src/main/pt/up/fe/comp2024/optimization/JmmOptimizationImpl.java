@@ -6,11 +6,13 @@ import org.specs.comp.ollir.OllirErrorException;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-
+import pt.up.fe.comp.jmm.report.Report;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import pt.up.fe.comp.jmm.report.Stage;
+import pt.up.fe.comp.jmm.report.StageResult;
 
 public class JmmOptimizationImpl implements JmmOptimization {
 
@@ -56,13 +58,13 @@ public class JmmOptimizationImpl implements JmmOptimization {
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
         int numReg = ollirResult.getConfig().containsKey("registerAllocation") ? Integer.parseInt(ollirResult.getConfig().get("registerAllocation")) : -1;
-        boolean optimize1 = ollirResult.getConfig().containsKey("optimize");
-
         if (numReg >= 0) { // Register Allocation
             for (Method method : ollirResult.getOllirClass().getMethods()) {
                 method.buildCFG();
                 method.buildVarTable();
-
+                if(method.isConstructMethod()){
+                    continue;
+                }
                 DataFlowAnalysis dataFlowAnalysis = new DataFlowAnalysis(method);
                 dataFlowAnalysis.run();
 
@@ -71,18 +73,14 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
                 Graph graph = new Graph(in, out, method);
                 graph.run();
-
-
-                System.out.println("Hello world");
+                if(graph.getMinReg() > numReg && numReg > 0){
+                    System.out.println("The number of registers is not enough");
+                    ollirResult.getReports().add(Report.newError(Stage.OPTIMIZATION, -1, -1, "The number of registers is not enough the number needed is :" + graph.getMinReg(),null));
+                    return ollirResult;
+                }
             }
         }
 
-        if (optimize1) {
-            if (ollirResult.getConfig().get("optimize").equals("true")) {
-                //TODO OPTIMIZE HERE
-            }
-
-        }
         //TODO: Do your OLLIR-based optimizations here
 
         return ollirResult;

@@ -8,12 +8,13 @@ import org.specs.comp.ollir.Method;
 import java.util.*;
 
 public class Graph {
-    Set<String> nodes;
-    Map<String, Set<String>> edges;
-    Map<Instruction, Set<String>> in;
-    Map<Instruction, Set<String>> out;
-    HashMap<String, Descriptor> old_varTable;
-    Method method;
+    private Set<String> nodes;
+    private Map<String, Set<String>> edges;
+    private Map<Instruction, Set<String>> in;
+    private Map<Instruction, Set<String>> out;
+    private HashMap<String, Descriptor> old_varTable;
+    private Method method;
+    private int minReg = 0;
 
     public Graph(Map<Instruction, Set<String>> in, Map<Instruction, Set<String>> out, Method method) {
         this.nodes = new HashSet<>();
@@ -38,6 +39,12 @@ public class Graph {
         addEdges(out.values());
 
         System.out.println("Hello world");
+        if(nodes.isEmpty()){
+            System.out.println("Empty");
+            return;
+        }
+        DSaturAlgorithm();
+        System.out.println(this.minReg);
     }
 
     private void addEdges(Collection<Set<String>> in) {
@@ -52,6 +59,34 @@ public class Graph {
                 }
             }
 
+        }
+    }
+    public int getMinReg(){
+        return this.minReg;
+    }
+    private void DSaturAlgorithm(){
+        Comparator<String> comparator = new Comparator<>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return edges.get(o2).size() - edges.get(o1).size();
+            }
+        };
+        List<String> nodesList = new ArrayList<>(nodes);
+        nodesList.sort(comparator);// to have the priority on the nodes with more connections
+        HashMap<String,Integer> colors = new HashMap<>();// VarName -> Register
+        int i = 1;
+        for(String node : nodesList){
+            i = 1;
+            for(String neighbor : edges.get(node)){
+                if(colors.containsKey(neighbor) && colors.get(neighbor) == i){
+                        i++;
+                }
+            }
+            colors.put(node,i);
+        }
+        this.minReg = colors.values().stream().max(Integer::compareTo).get();
+        for(String var : colors.keySet()){
+            old_varTable.get(var).setVirtualReg(colors.get(var));
         }
     }
 
