@@ -35,7 +35,7 @@ public class Graph {
         Collection<Set<String>> firstInsList = new HashSet<>();
         firstInsList.add(firstIns);
 
-        addEdges(in.values());
+        addEdges(firstInsList);
         addEdges(out.values());
 
         System.out.println("Hello world");
